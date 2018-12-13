@@ -1,12 +1,16 @@
 package org.tree.commons.support.controller;
 
-import org.springframework.stereotype.Controller;
+import com.alibaba.fastjson.JSON;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.tree.commons.annotation.Comment;
 
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -20,40 +24,50 @@ import java.util.List;
  *
  * <p>  由于要获取入参名, 所以必须使用 java 8 外加 -parameters 编译选项, 否则无法获取正确的入参名
  */
-@Controller
-public class ControllerHelper {
+@RestController
+public class DebugController {
+    @Autowired
+    BeanDefinition beanDefinition;
 
-    @RequestMapping("/helloWorld.do")
-    public String helloWorld(ModelMap map) throws Exception {
+    @Autowired
+    private DebugConfig config;
+
+    @RequestMapping("/debug.do")
+    public String debug(ModelMap map) throws Exception {
         /* 运行时不需要模块名 */
-//        List<Class> classes = scanController("");
-//        List<ClassInfo> values = getClassInfo(classes);
-//        map.put("values", values);
-//        map.put("jsonValues", JSON.toJSONString(values));
-//        return new ClassPathResource("org/tree/commons/support/jsp/helloWorld.jsp").getFile().getCanonicalPath();
-        System.out.println(new File("").getCanonicalPath());
-        return "/hello.jsp";
+        List<Class> classes = scanController();
+        List<ClassInfo> values = getClassInfo(classes);
+        File file = new ClassPathResource("org/tree/commons/support/html/debug.html").getFile();
+        RandomAccessFile access = new RandomAccessFile(file, "r");
+        String temp;
+        StringBuilder sb = new StringBuilder();
+        while (access.getFilePointer() < access.length()) {
+            temp = access.readLine();
+            if (temp.contains("${jsonValues}"))
+                temp = temp.replace("${jsonValues}", JSON.toJSONString(values));
+            sb.append(temp);
+        }
+        return new String(sb);
     }
 
-    @RequestMapping("/jsonValue.do")
-    @ResponseBody
-    public List<ClassInfo> jsonValue(ModelMap map) throws Exception {
+    @RequestMapping("/debugValue.do")
+    public List<ClassInfo> debugValue(ModelMap map) throws Exception {
         /* 运行时不需要模块名 */
-        List<Class> classes = scanController("");
+        List<Class> classes = scanController();
         List<ClassInfo> values = getClassInfo(classes);
         return values;
     }
 
     /* 获取 controller 下的类 */
-    public static List<Class> scanController(String module) throws Exception {
-        String path = System.getProperty("user.dir") + "/" + module + "/" + "src/main/java/";
-        String targetPackage = ControllerHelper.class.getPackage().getName();
-        String targetPath = targetPackage.replace(".", "/");
-        File dir = new File(path + targetPath);
+    public List<Class> scanController() throws Exception {
+        String packageToScan = config.getPackageToScan();
+        if (packageToScan == null)
+            throw new Exception("请正确配置 DebugConfig !");
+        File dir = new ClassPathResource(packageToScan.replace(".", "/")).getFile();
         String[] files = dir.list();
         List<String> list = new ArrayList<>(files.length);
         for (String str : files)
-            list.add(targetPackage + "." + str.split("\\.")[0]);
+            list.add(packageToScan + "." + str.split("\\.")[0]);
         List<Class> result = new ArrayList<>(files.length);
         for (String str : list)
             result.add(Class.forName(str));
