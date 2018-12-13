@@ -1,8 +1,9 @@
-package org.tree.common.utils;
+package org.tree.commons.utils;
 
-import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 /**
@@ -13,7 +14,8 @@ public class PropertiesUtils {
     /* 读取指定 properties 文件 */
     public static Properties getProperties(String path) throws IOException {
         Properties properties = new Properties();
-        properties.load(PropertyUtils.class.getClassLoader().getResourceAsStream(path));
+        InputStream in = new ClassPathResource(path).getInputStream();
+        properties.load(in);
         return properties;
     }
 }

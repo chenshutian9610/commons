@@ -5,8 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.tree</groupId>
-    <artifactId>common</artifactId>
+    <artifactId>commons</artifactId>
     <version>1.0.0</version>
+    <packaging>war</packaging>
 
     <properties>
         <java.version>1.8</java.version>
@@ -251,6 +252,15 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.jsp</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.mybatis.generator</groupId>
@@ -336,6 +346,17 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
+            <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-war-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <attachClasses>true</attachClasses>
+                    <classesClassifier>api</classesClassifier>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 

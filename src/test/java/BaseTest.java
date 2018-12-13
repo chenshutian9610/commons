@@ -1,6 +1,6 @@
 import org.testng.annotations.Test;
-import org.tree.common.utils.PropertiesUtils;
-import org.tree.generate.generator.CodeGenerator;
+import org.tree.commons.utils.PropertiesUtils;
+import org.tree.commons.generate.generator.CodeGenerator;
 
 import java.io.File;
 import java.net.URL;

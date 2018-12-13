@@ -1,4 +1,4 @@
-package org.tree.generate.annotation;
+package org.tree.commons.generate.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

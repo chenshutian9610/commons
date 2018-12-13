@@ -1,4 +1,4 @@
-package org.tree.generate.plugins;
+package org.tree.commons.generate.plugins;
 
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -15,8 +15,10 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 /**
  * @author er_dong_chen
  * @date 2018/12/4
+ *
+ * <p>  generateComment 可配置, 非空的时候使用自己生成的 Comment, 不建议
  */
-public class ModelPlugin extends PluginAdapter {
+public class ModelCommentPlugin extends PluginAdapter {
     @Override
     public boolean validate(List<String> warnings) {
         return true;
@@ -30,6 +32,9 @@ public class ModelPlugin extends PluginAdapter {
 
     @Override
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles() {
+        String generateComment = properties.getProperty("generateComment");
+        if (generateComment == null)
+            return null;
         List<GeneratedJavaFile> javaFiles = new ArrayList<>(1);
         Annotation annotation = new Annotation(context.getJavaModelGeneratorConfiguration().getTargetPackage() + ".Comment");
         annotation.setVisibility(JavaVisibility.PUBLIC);
@@ -47,7 +52,12 @@ public class ModelPlugin extends PluginAdapter {
     /****************************** 主方法 *******************************/
 
     private void generateAnnotation(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        String annotation = context.getJavaModelGeneratorConfiguration().getTargetPackage() + ".Comment";
+        String annotation;
+        String generateComment = properties.getProperty("generateComment");
+        annotation = generateComment == null ?
+                "org.tree.commons.annotation.Comment" :
+                context.getJavaModelGeneratorConfiguration().getTargetPackage() + ".Comment";
+        topLevelClass.addImportedType(new FullyQualifiedJavaType(annotation));
         topLevelClass.addAnnotation(_getAnnotationString(annotation, introspectedTable.getTableConfiguration().getTableName()));
         Field tableName = new Field("tableName", new FullyQualifiedJavaType("String"));
         tableName.setVisibility(JavaVisibility.PUBLIC);
@@ -60,7 +70,7 @@ public class ModelPlugin extends PluginAdapter {
         String comment;
         for (Field field : fields) {
             comment = comments.get(field.getName());
-            if (comment != null)
+            if (comment != null && comment.length() != 0)
                 field.addAnnotation(_getAnnotationString(annotation, comment));
         }
     }

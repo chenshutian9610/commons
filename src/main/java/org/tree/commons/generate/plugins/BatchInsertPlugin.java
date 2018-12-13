@@ -1,4 +1,4 @@
-package org.tree.generate.plugins;
+package org.tree.commons.generate.plugins;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;

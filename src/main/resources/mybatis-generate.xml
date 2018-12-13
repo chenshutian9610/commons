@@ -3,13 +3,10 @@
         PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
         "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
-    <properties resource="config/jdbc-test.properties"/>
+    <properties resource="generator.properties"/>
     <context id="generateTables" targetRuntime="MyBatis3">
         <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
         <!--<plugin type="org.mybatis.generator.plugins.CachePlugin"></plugin>-->
-        <plugin type="org.tree.generate.plugins.MapperPlugin"/>
-        <plugin type="org.tree.generate.plugins.ModelPlugin"/>
-        <plugin type="org.tree.generate.plugins.BatchInsertPlugin"/>
         <!--<plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>-->
         <!-- 自定义物理分页  可生成支持Mysql数据的limit  不支持Oracle
         <plugin type="org.mybatis.generator.plugins.page.PaginationPlugin"/> -->
@@ -19,22 +16,31 @@
         <plugin type="org.mybatis.generator.plugins.RowBoundsPlugin" /> -->
         <!-- generate entity时，生成hashcode和equals方法
         <plugin type="org.mybatis.generator.plugins.EqualsHashCodePlugin" /> -->
+
+        <!-- my plugins -->
+        <plugin type="org.tree.commons.generate.plugins.NewMapperMethodPlugin"/>
+        <plugin type="org.tree.commons.generate.plugins.ModelCommentPlugin"/>
+        <plugin type="org.tree.commons.generate.plugins.GenerateMapperMapPlugin"/>
+        <plugin type="org.tree.commons.generate.plugins.GenericDealPlugin"/>
+        <plugin type="org.tree.commons.generate.plugins.BatchInsertPlugin"/>
+        <!-- 不建议用
+        <plugin type="org.tree.commons.generate.plugins.GenerateBaseMapperAndExamplePlugin"/> -->
         <commentGenerator>
             <property name="suppressAllComments" value="true"/>
         </commentGenerator>
-        <jdbcConnection driverClass="${mysql.driver}"
-                        connectionURL="${mysql.url}"
-                        userId="${mysql.username}"
-                        password="${mysql.password}"/>
+        <jdbcConnection driverClass="${jdbc.driver}"
+                        connectionURL="${jdbc.url}"
+                        userId="${jdbc.username}"
+                        password="${jdbc.password}"/>
         <javaTypeResolver>
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
-        <javaModelGenerator targetPackage="org.tree.faster.domain" targetProject="./${module}/src/main/java">
+        <javaModelGenerator targetPackage="${model.package}" targetProject="${java.target}">
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
-        <sqlMapGenerator targetPackage="mapper" targetProject="./${module}/src/main/resources/"/>
-        <javaClientGenerator type="XMLMAPPER" targetPackage="org.tree.faster.mapper"
-                             targetProject="./${module}/src/main/java">
+        <sqlMapGenerator targetPackage="mapper" targetProject="${xml.target}"/>
+        <javaClientGenerator type="XMLMAPPER" targetPackage="${mapper.package}"
+                             targetProject="${java.target}">
             <!--<property name="rootInterface" value="org.tree.faster.temp.BaseMapperaseMapper-->
         </javaClientGenerator>
         <table tableName="it won't be use"/>
