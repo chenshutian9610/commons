@@ -1,5 +1,7 @@
 package org.tree.commons.support.mapper;
 
+import java.util.List;
+
 public interface BaseMapper<T> {
     long countByExample(Example example);
 
@@ -23,5 +25,9 @@ public interface BaseMapper<T> {
 
     int updateByPrimaryKey(T record);
 
-    java.util.List<T> selectParams(String sql);
+    List<T> querySelective(String sql);
+
+    List<T> querySelectiveByExample(Example example);
+
+    int insertBatchSelective(List<T> records);
 }

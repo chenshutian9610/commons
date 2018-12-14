@@ -16,7 +16,7 @@ import java.util.List;
  *
  * <p>  新增方法
  */
-public class NewMapperMethodPlugin extends PluginAdapter {
+public class QuerySelectivePlugin extends PluginAdapter {
 
     @Override
     public boolean validate(List<String> warnings) {
@@ -32,7 +32,7 @@ public class NewMapperMethodPlugin extends PluginAdapter {
     }
 
     private void generateXmlElement(Document document) {
-        XmlElement element = _newXmlElement("select", "selectParams", "${sql}");
+        XmlElement element = _newXmlElement("select", "querySelective", "${sql}");
         document.getRootElement().addElement(element);
     }
 
@@ -55,8 +55,8 @@ public class NewMapperMethodPlugin extends PluginAdapter {
     }
 
     private void generateMapperMethod(Interface i) {
-        Method method = _newMapperMethod("java.util.List<" + _getModelName(i) + ">", "selectParams",
-                new Parameter(new FullyQualifiedJavaType("java.lang.String"), "sql", "@Param(\"sql\")"));
+        Method method = _newMapperMethod("java.util.List<" + _getModelName(i) + ">", "querySelective",
+                new Parameter(new FullyQualifiedJavaType("String"), "sql", "@Param(\"sql\")"));
         i.addMethod(method);
     }
 

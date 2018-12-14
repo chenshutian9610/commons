@@ -1,4 +1,6 @@
 package org.tree.commons.support.mapper;
 
-public interface Example<T> {
+public abstract class Example<T> {
+    protected void setArgs(String args) {
+    }
 }

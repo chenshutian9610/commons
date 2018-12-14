@@ -14,7 +14,7 @@ import java.util.List;
  * @author er_dong_chen
  * @date 2018/12/13
  */
-public class GenerateMapperMapPlugin extends PluginAdapter {
+public class MapperMapPlugin extends PluginAdapter {
     private static List<String> mapperList = new ArrayList<>();
 
     @Override

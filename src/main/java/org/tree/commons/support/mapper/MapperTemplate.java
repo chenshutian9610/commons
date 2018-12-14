@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.text.DateFormat;
@@ -18,15 +19,12 @@ import java.util.Date;
  * @author er_dong_chen
  * @date 2018/10/31
  */
-public abstract class DaoTemplate {
+@Repository
+public class MapperTemplate {
     @Autowired
-    protected MapperMap map;
+    private MapperMap map;
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    public String columns(String... columns) {
-        return " " + String.join(",", columns) + " ";
-    }
 
     public String deal(String sql, Object... params) {
         if (params.length == 0)
@@ -46,23 +44,47 @@ public abstract class DaoTemplate {
         return new String(sb);
     }
 
-//    public <T> int insertBatchSelective(List<T> list) {
-//        if (list == null || list.size() == 0)
-//            return -1;
-//        BaseMapper baseMapper = _getMapper(list.get(0).getClass());
-//        return baseMapper.insertBatchSelective(list);
-//    }
+    public <T> int insertBatchSelective(List<T> list) {
+        if (list == null || list.size() == 0)
+            return -1;
+        BaseMapper baseMapper = _getMapper(list.get(0).getClass());
+        return baseMapper.insertBatchSelective(list);
+    }
 
-    public <T> List<T> select(Class<T> clazz, String sql, Object... params) {
+    public <T> List<T> querySelective(Class<T> clazz, String sql, Object... params) {
         BaseMapper baseMapper = _getMapper(clazz);
         sql = deal(sql, params);
         if (baseMapper != null)
-            return baseMapper.selectParams(sql);
+            return baseMapper.querySelective(sql);
         else
             return jdbcTemplate.queryForList(sql, clazz);
     }
 
-    public List<Map<String, String>> select(String sql, Object... params) {
+    public <T> T querySelectiveByExampleForObject(Class<T> clazz, Args args, Example example) {
+        example.setArgs(args.toString());
+        return querySelectiveByExampleForObject(clazz, example);
+    }
+
+    public <T> T querySelectiveByExampleForObject(Class<T> clazz, Example example) {
+        List<T> result = querySelectiveByExample(clazz, example);
+        if (result == null || result.size() == 0)
+            return null;
+        return result.get(0);
+    }
+
+    public <T> List<T> querySelectiveByExample(Class<T> clazz, Args args, Example example) {
+        example.setArgs(args.toString());
+        return querySelectiveByExample(clazz, example);
+    }
+
+    public <T> List<T> querySelectiveByExample(Class<T> clazz, Example example) {
+        BaseMapper baseMapper = _getMapper(clazz);
+        if (baseMapper != null)
+            return baseMapper.querySelectiveByExample(example);
+        return null;
+    }
+
+    public List<Map<String, String>> querySelective(String sql, Object... params) {
         return jdbcTemplate.query(deal(sql, params), new ResultSetExtractor<List<Map<String, String>>>() {
             @Override
             public List<Map<String, String>> extractData(ResultSet resultSet) throws SQLException, DataAccessException {
@@ -87,12 +109,12 @@ public abstract class DaoTemplate {
         });
     }
 
-    public <T> T selectForObject(Class<T> clazz, String sql, Object... params) {
-        List<T> result = select(clazz, sql, params);
+    public <T> T querySelectiveForObject(Class<T> clazz, String sql, Object... params) {
+        List<T> result = querySelective(clazz, sql, params);
         return result.size() == 0 ? null : result.get(0);
     }
 
-    public Map<String, String> selectForObject(String sql, Object... params) {
+    public Map<String, String> querySelectiveForObject(String sql, Object... params) {
         return jdbcTemplate.query(deal(sql, params), new ResultSetExtractor<Map<String, String>>() {
             @Override
             public Map<String, String> extractData(ResultSet resultSet) throws SQLException, DataAccessException {

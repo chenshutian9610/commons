@@ -2,7 +2,6 @@ package org.tree.commons.support.controller;
 
 import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,8 +25,6 @@ import java.util.List;
  */
 @RestController
 public class DebugController {
-    @Autowired
-    BeanDefinition beanDefinition;
 
     @Autowired
     private DebugConfig config;
@@ -39,13 +36,16 @@ public class DebugController {
         List<ClassInfo> values = getClassInfo(classes);
         File file = new ClassPathResource("org/tree/commons/support/html/debug.html").getFile();
         RandomAccessFile access = new RandomAccessFile(file, "r");
-        String temp;
+        String temp, jsonValues;
         StringBuilder sb = new StringBuilder();
         while (access.getFilePointer() < access.length()) {
             temp = access.readLine();
-            if (temp.contains("${jsonValues}"))
-                temp = temp.replace("${jsonValues}", JSON.toJSONString(values));
-            sb.append(temp);
+            if (temp.contains("${jsonValues}")) {
+                /* 这句代码必须的, 否则乱码 */
+                jsonValues = new String(JSON.toJSONString(values).getBytes("utf-8"), "iso-8859-1");
+                temp = temp.replace("${jsonValues}", jsonValues);
+            }
+            sb.append(temp + "\n");
         }
         return new String(sb);
     }

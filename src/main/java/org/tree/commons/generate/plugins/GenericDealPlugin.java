@@ -34,7 +34,7 @@ public class GenericDealPlugin extends PluginAdapter {
     /* 令所有 Example 实现 Example */
     private void generateExampleRootInterface(TopLevelClass topLevelClass) {
         String extend = Example.class.getName();
-        topLevelClass.addSuperInterface(new FullyQualifiedJavaType(_getGenericString(topLevelClass, extend)));
+        topLevelClass.setSuperClass(new FullyQualifiedJavaType(_getGenericString(topLevelClass, extend)));
         topLevelClass.addImportedType(extend);
     }
 
