@@ -37,7 +37,7 @@ public class DebugController {
         if (config.getPackageToScan().length() == 0)
             throw new Exception("使用此功能需要配置 debug.packageToScan !");
         List<Class> classes = scanController(config.getPackageToScan());
-        List<String> ignoreFields = Arrays.asList("tableName");
+        List<String> ignoreFields = Arrays.asList("TABLE");
         List<ClassInfo> values = getClassInfo(classes, ignoreFields);
         return values;
     }

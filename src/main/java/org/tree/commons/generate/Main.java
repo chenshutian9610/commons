@@ -11,7 +11,7 @@ import org.tree.commons.generate.generator.TableGenerator;
  */
 public class Main {
     public static void main(String args[]) throws Exception {
-        String properties = "template/generator.properties";
+        String properties = "generate/generator.properties";
         TableGenerator tableGenerator = new TableGenerator(properties);
         tableGenerator.generate();
         CodeGenerator.generate(tableGenerator.getTableMap());

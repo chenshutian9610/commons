@@ -16,8 +16,6 @@ import java.util.Map;
  * @date 18-12-14
  */
 public class ArgsPlugin extends PluginAdapter {
-    //    private String modelName;
-//    private List<String> modelFileds = new ArrayList<>();
     private Map<String, List<String>> modelArgs = new HashMap<>();
 
     @Override
@@ -53,7 +51,7 @@ public class ArgsPlugin extends PluginAdapter {
 
             initializationBlock = new InitializationBlock();
             for (String modelField : entry.getValue()) {
-                if ("tableName".equals(modelField))
+                if ("TABLE".equals(modelField))
                     continue;
 
                 field = new Field(modelField, new FullyQualifiedJavaType("Arg"));

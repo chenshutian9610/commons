@@ -29,5 +29,7 @@ public interface BaseMapper<T> {
 
     List<T> querySelectiveByExample(Example example);
 
+    int insertSelectiveWithGeneratedKey(T record);
+
     int insertBatchSelective(List<T> records);
 }

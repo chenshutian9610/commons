@@ -5,6 +5,7 @@ import org.springframework.core.io.Resource;
 import org.tree.commons.generate.annotation.Column;
 import org.tree.commons.generate.annotation.Table;
 import org.tree.commons.utils.PropertiesUtils;
+import org.tree.commons.utils.StringUtils;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -17,13 +18,18 @@ import java.util.*;
 /**
  * @author er_dong_chen
  * @date 2018/12/11
- *
+ * <p>
  * 可配置参数有 jdbc.driver, jdbc.url, jdbc.username, jdbc.password 和 packageToScan
  */
 public class TableGenerator {
     private Map<String, String> tableMap = new HashMap<>();
     private List<String> scripts = new ArrayList<>();
     private Properties properties;
+
+    public TableGenerator() throws Exception {
+        properties = PropertiesUtils.getProperties("generator.properties");
+        _init(properties.getProperty("packageToScan"));
+    }
 
     public TableGenerator(String propertiesFile) throws Exception {
         properties = PropertiesUtils.getProperties(propertiesFile);
@@ -58,7 +64,7 @@ public class TableGenerator {
         Field[] fields;
         Table table;
         Column column;
-        String columnName, type, comment, defaultValue, unique, id, columnDefinition;
+        String tableName, columnName, type, comment, defaultValue, unique, id, columnDefinition;
         int length = 40;
         for (String name : fileNames) {
             List<String> columnDefinitions = new ArrayList<>();
@@ -68,21 +74,24 @@ public class TableGenerator {
             fields = clazz.getDeclaredFields();
             table = (Table) clazz.getAnnotation(Table.class);
             if (table == null) continue;
-            String drop = String.format("DROP TABLE IF EXISTS %s;", table.name());
-            ddl.append(String.format("CREATE TABLE %s (\n", table.name()));
+            tableName = table.name().length() == 0 ? StringUtils.format(name, false) : table.name();
             for (Field field : fields) {
                 column = (Column) field.getAnnotation(Column.class);
                 columnDefinitions.add(_getColumnDefinition(field, column).trim());
             }
-            ddl.append(String.join(",\n", columnDefinitions));
-            ddl.append(String.format("\n) %s COMMENT = '%s';", table.meta(), table.comment()));
-            System.out.println("\n" + drop + "\n" + new String(ddl));
 
-            scripts.add(drop);
-            scripts.add(new String(ddl));
-            tableMap.put(name, table.name());
+            if (table.generate()) {
+                String drop = String.format("DROP TABLE IF EXISTS %s;", tableName);
+                ddl.append(String.format("CREATE TABLE %s (\n", tableName));
+                ddl.append(String.join(",\n", columnDefinitions));
+                ddl.append(String.format("\n) %s COMMENT = '%s';", table.meta(), table.comment()));
+
+                scripts.add(drop);
+                scripts.add(new String(ddl));
+            }
+
+            tableMap.put(name, tableName);
         }
-        System.out.println();
     }
 
     private String _getColumnDefinition(Field field, Column column) {
@@ -146,7 +155,9 @@ public class TableGenerator {
         String password = properties.getProperty("jdbc.password");
         Connection connection = DriverManager.getConnection(url, username, password);
         Statement statement = connection.createStatement();
-        for (String script : scripts)
+        for (String script : scripts) {
+            System.out.println(script + "\n");
             statement.execute(script);
+        }
     }
 }

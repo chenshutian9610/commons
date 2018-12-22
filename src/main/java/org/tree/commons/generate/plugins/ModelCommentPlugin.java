@@ -59,7 +59,7 @@ public class ModelCommentPlugin extends PluginAdapter {
                 context.getJavaModelGeneratorConfiguration().getTargetPackage() + ".Comment";
         topLevelClass.addImportedType(new FullyQualifiedJavaType(annotation));
         topLevelClass.addAnnotation(_getAnnotationString(annotation, introspectedTable.getTableConfiguration().getTableName()));
-        Field tableName = new Field("tableName", new FullyQualifiedJavaType("String"));
+        Field tableName = new Field("TABLE", new FullyQualifiedJavaType("String"));
         tableName.setVisibility(JavaVisibility.PUBLIC);
         tableName.setFinal(true);
         tableName.setStatic(true);
@@ -81,7 +81,10 @@ public class ModelCommentPlugin extends PluginAdapter {
         List<IntrospectedColumn> columns = introspectedTable.getBaseColumns();
         Map<String, String> result = new HashMap<>();
         for (IntrospectedColumn column : columns)
-            result.put(_deal(column.getActualColumnName()), column.getRemarks());
+            result.put(column.getJavaProperty(), column.getRemarks());
+        List<IntrospectedColumn> keys = introspectedTable.getPrimaryKeyColumns();
+        for (IntrospectedColumn key : keys)
+            result.put(key.getJavaProperty(), key.getRemarks());
         return result;
     }
 
@@ -89,20 +92,6 @@ public class ModelCommentPlugin extends PluginAdapter {
         if (className.contains("."))
             className = className.substring(className.lastIndexOf(".") + 1);
         return "@" + className + "(\"" + value + "\")";
-    }
-
-    /* 下划线转驼峰 */
-    private String _deal(String str) {
-        if (str.contains("_")) {
-            String[] array = str.split("_");
-            StringBuilder sb = new StringBuilder(array[0]);
-            for (int i = 1; i < array.length; i++) {
-                sb.append(array[i].substring(0, 1).toUpperCase());
-                sb.append(array[i].substring(1, array[i].length()));
-            }
-            return new String(sb);
-        }
-        return str;
     }
 
     /****************************** 内部类 *******************************/

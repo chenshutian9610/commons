@@ -19,4 +19,6 @@ public @interface Table {
 
     String meta() default "ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
+    /* 为 false 时只扫描但不生成表 */
+    boolean generate() default true;
 }

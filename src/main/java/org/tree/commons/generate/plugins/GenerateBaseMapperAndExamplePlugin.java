@@ -1,11 +1,11 @@
 package org.tree.commons.generate.plugins;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.DefaultJavaFormatter;
 import org.mybatis.generator.api.dom.java.*;
+import org.springframework.beans.BeanUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +69,8 @@ public class GenerateBaseMapperAndExamplePlugin extends PluginAdapter {
         String str;
         try {
             for (Method method : src) {
-                temp = (Method) BeanUtils.cloneBean(method);
+                temp = new Method();
+                BeanUtils.copyProperties(method, temp);
                 if (temp.getReturnType().getShortName().contains("List"))
                     temp.setReturnType(new FullyQualifiedJavaType("java.util.List<T>"));
                 if (temp.getReturnType().getShortName().contains(modelName))

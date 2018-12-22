@@ -31,12 +31,16 @@ public class MapperMapPlugin extends PluginAdapter {
     @Override
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles() {
         List<GeneratedJavaFile> javaFiles = new ArrayList<>(1);
-        javaFiles.add(generateMapperMap());
+        GeneratedJavaFile file = generateMapperMap();
+        if (file != null)
+            javaFiles.add(file);
         return javaFiles;
     }
 
     /* 生成 MapperMap 类 */
     private GeneratedJavaFile generateMapperMap() {
+        if (mapperList.size() == 0)
+            return null;
         String mapperPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
         String mapperProjectPath = context.getJavaClientGeneratorConfiguration().getTargetProject();
         TopLevelClass mapperMap = new TopLevelClass(mapperPackage + ".LocalMapperMap");
@@ -47,12 +51,6 @@ public class MapperMapPlugin extends PluginAdapter {
         mapperMap.addImportedType(MapperMap.class.getName());
         mapperMap.addAnnotation("@Component");
         mapperMap.setSuperClass("MapperMap");
-//        mapperMap.addImportedType("java.util.HashMap");
-//        mapperMap.addImportedType("java.util.Map");
-//        Field field = new Field("map", new FullyQualifiedJavaType("java.util.Map"));
-//        field.setInitializationString("new HashMap<String, BaseMapper>()");
-//        field.setStatic(true);
-//        mapperMap.addField(field);
         Method method = new Method("init");
         method.setVisibility(JavaVisibility.PUBLIC);
         method.addAnnotation("@PostConstruct");

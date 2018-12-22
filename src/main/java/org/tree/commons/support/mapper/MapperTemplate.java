@@ -51,6 +51,11 @@ public class MapperTemplate {
         return baseMapper.insertBatchSelective(list);
     }
 
+    public <T> int insertSelectiveWithGeneratedKey(T obj) {
+        BaseMapper baseMapper = _getMapper(obj);
+        return baseMapper.insertSelectiveWithGeneratedKey(obj);
+    }
+
     public <T> T queryForObject(Class<T> clazz, String sql, Object... params) {
         List<T> result = query(clazz, sql, params);
         return result.size() == 0 ? null : result.get(0);
@@ -198,8 +203,8 @@ public class MapperTemplate {
     }
 
     public <T> T selectByExampleForObject(Example<T> example) {
-        List<T> result=selectByExample(example);
-        return result.size()==0?null:result.get(0);
+        List<T> result = selectByExample(example);
+        return result.size() == 0 ? null : result.get(0);
     }
 
     public <T> List<T> selectByExample(Example<T> example) {
