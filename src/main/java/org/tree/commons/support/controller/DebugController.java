@@ -3,18 +3,20 @@ package org.tree.commons.support.controller;
 import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.tree.commons.annotation.Comment;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.RandomAccessFile;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -25,44 +27,43 @@ import java.util.List;
  */
 @RestController
 public class DebugController {
-
     @Autowired
-    private DebugConfig config;
+    private ControllerConfig config;
 
-    @RequestMapping("/debug.do")
-    public String debug(ModelMap map) throws Exception {
-        /* 运行时不需要模块名 */
-        List<Class> classes = scanController();
-        List<ClassInfo> values = getClassInfo(classes);
-        File file = new ClassPathResource("org/tree/commons/support/html/debug.html").getFile();
-        RandomAccessFile access = new RandomAccessFile(file, "r");
-        String temp, jsonValues;
-        StringBuilder sb = new StringBuilder();
-        while (access.getFilePointer() < access.length()) {
-            temp = access.readLine();
-            if (temp.contains("${jsonValues}")) {
-                /* 这句代码必须的, 否则乱码 */
-                jsonValues = new String(JSON.toJSONString(values).getBytes("utf-8"), "iso-8859-1");
-                temp = temp.replace("${jsonValues}", jsonValues);
-            }
-            sb.append(temp + "\n");
-        }
-        return new String(sb);
-    }
-
-    @RequestMapping("/debugValue.do")
-    public List<ClassInfo> debugValue(ModelMap map) throws Exception {
-        /* 运行时不需要模块名 */
-        List<Class> classes = scanController();
-        List<ClassInfo> values = getClassInfo(classes);
+    @RequestMapping("/value.do")
+    public List<ClassInfo> value() throws Exception {
+        if (!config.isDebugEnable())
+            throw new Exception("现在不处于 debug 模式");
+        if (config.getPackageToScan().length() == 0)
+            throw new Exception("使用此功能需要配置 debug.packageToScan !");
+        List<Class> classes = scanController(config.getPackageToScan());
+        List<String> ignoreFields = Arrays.asList("tableName");
+        List<ClassInfo> values = getClassInfo(classes, ignoreFields);
         return values;
     }
 
+    @RequestMapping("/debug.do")
+    public byte[] debug() throws Exception {
+        List<ClassInfo> values = value();
+
+        /* 从 jar 包中读取文件需要使用 ClassLoader::getResourceAsStream 才能成功 !!! */
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("html/debug.html");
+        /* 读取出来的文件需要使用 "utf-8" 编解码，否则再 win 下乱码 */
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in, "utf-8"));
+
+        String temp;
+        StringBuilder sb = new StringBuilder();
+        while ((temp = reader.readLine()) != null) {
+            if (temp.contains("${jsonValues}"))
+                temp = temp.replace("${jsonValues}", JSON.toJSONString(values));
+            sb.append(temp + "\n");
+        }
+
+        return new String(sb).getBytes("utf-8");
+    }
+
     /* 获取 controller 下的类 */
-    public List<Class> scanController() throws Exception {
-        String packageToScan = config.getPackageToScan();
-        if (packageToScan == null)
-            throw new Exception("请正确配置 DebugConfig !");
+    public List<Class> scanController(String packageToScan) throws Exception {
         File dir = new ClassPathResource(packageToScan.replace(".", "/")).getFile();
         String[] files = dir.list();
         List<String> list = new ArrayList<>(files.length);
@@ -75,8 +76,7 @@ public class DebugController {
     }
 
     /* 通过反射获取 url 和接口属性 */
-    public static List<ClassInfo> getClassInfo(List<Class> classes) throws Exception {
-        RequestMapping annotation;
+    public static List<ClassInfo> getClassInfo(List<Class> classes, List<String> ignoreFields) {
         List<ClassInfo> classInfos = new ArrayList<>(classes.size());
         for (Class clazz : classes) {
             ClassInfo classInfo = new ClassInfo();
@@ -103,7 +103,7 @@ public class DebugController {
                         }
                         Field[] MethodInfo = parameter.getType().getDeclaredFields();
                         for (Field field : MethodInfo) {
-                            if (!field.getName().equals("id"))  //  忽略 id 字段
+                            if (!ignoreFields.contains(field.getName()))
                                 args.add(new ArgInfo(field.getName(), _getComment(field)));
                         }
                     }
@@ -113,7 +113,6 @@ public class DebugController {
             classInfo.setMethods(methodInfos);
             classInfos.add(classInfo);
         }
-
         return classInfos;
     }
 

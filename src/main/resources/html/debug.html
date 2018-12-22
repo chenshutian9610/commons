@@ -8,16 +8,31 @@
         table {
             position: relative;
             top: 60px;
-            left: 500px;
+            left: 40px;
         }
-
 
     </style>
 </head>
 
 <body>
 <script>
-        var array = JSON.parse('${jsonValues}');
+        var array=JSON.parse('${jsonValues}');
+
+        function withoutAjax(){
+            var url = document.getElementById("url")
+            var p = document.getElementById("p")
+            var str = parent[parent.selectedIndex].value + child[child.selectedIndex].value;
+            var input = document.getElementsByTagName("input");
+            var s = [];
+            var m = 0;
+            for (var n = 0; n < input.length; n++)
+                if (input[n].value != "")
+                    s[m++] = input[n].id + "=" + input[n].value
+            var result = s.length != 0 ? str + "?" + s.join("&&") : str;
+            url.innerHTML = "go to:&emsp;&emsp;&nbsp;&nbsp;" + result;
+            p.innerHTML = "返回结果:"
+            location=result;
+        }
 
         function go() {
             var url = document.getElementById("url")
@@ -38,7 +53,8 @@
                 // context: document.body,
                 success: function (data) {
                     console.log("go to " + result)
-                    console.log(data)
+                    console.log(data['object'])
+                    console.log(data['message'])
                     p.innerHTML = "返回结果:&emsp;" + JSON.stringify(data)
                 }
             });
@@ -72,7 +88,7 @@
         function list() {
             for (var i in array)
                 for (var j in array[i]['methods'])
-                if (child[child.selectedIndex].value == array[i]['methods'][j]['method']) {
+                    if (child[child.selectedIndex].value == array[i]['methods'][j]['method']) {
                         clear(table);
                         for (var n in array[i]['methods'][j]['args']) {
                             var text = document.createElement("input");
@@ -105,7 +121,6 @@
                     }
         }
 
-
 </script>
 <table>
     <tr>
@@ -120,6 +135,7 @@
             <select id="child"></select>&nbsp;
             <button onclick="list()">list</button>&nbsp;
             <button onclick="go()">go</button>
+            <button onclick="withoutAjax()">go directly</button>
             <br>
         </td>
     </tr>
@@ -149,7 +165,6 @@
                 }
             }
         }
-
 
 </script>
 </body>

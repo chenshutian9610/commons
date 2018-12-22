@@ -40,7 +40,7 @@
         <javaModelGenerator targetPackage="${model.package}" targetProject="${java.target}">
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
-        <sqlMapGenerator targetPackage="mapper" targetProject="${xml.target}"/>
+        <sqlMapGenerator targetPackage="${xml.dir}" targetProject="${xml.target}"/>
         <javaClientGenerator type="XMLMAPPER" targetPackage="${mapper.package}"
                              targetProject="${java.target}">
             <!--<property name="rootInterface" value="org.tree.faster.temp.BaseMapperaseMapper-->

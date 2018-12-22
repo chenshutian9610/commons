@@ -44,14 +44,19 @@ public class MapperTemplate {
         return new String(sb);
     }
 
-    public <T> int insertBatchSelective(List<T> list) {
+    public <T> int batchInsert(List<T> list) {
         if (list == null || list.size() == 0)
             return -1;
         BaseMapper baseMapper = _getMapper(list.get(0).getClass());
         return baseMapper.insertBatchSelective(list);
     }
 
-    public <T> List<T> querySelective(Class<T> clazz, String sql, Object... params) {
+    public <T> T queryForObject(Class<T> clazz, String sql, Object... params) {
+        List<T> result = query(clazz, sql, params);
+        return result.size() == 0 ? null : result.get(0);
+    }
+
+    public <T> List<T> query(Class<T> clazz, String sql, Object... params) {
         BaseMapper baseMapper = _getMapper(clazz);
         sql = deal(sql, params);
         if (baseMapper != null)
@@ -60,31 +65,32 @@ public class MapperTemplate {
             return jdbcTemplate.queryForList(sql, clazz);
     }
 
-    public <T> T querySelectiveByExampleForObject(Class<T> clazz, Args args, Example example) {
+    public <T> T queryByExampleForObject(Args args, Example<T> example) {
         example.setArgs(args.toString());
-        return querySelectiveByExampleForObject(clazz, example);
+        return queryByExampleForObject(example);
     }
 
-    public <T> T querySelectiveByExampleForObject(Class<T> clazz, Example example) {
-        List<T> result = querySelectiveByExample(clazz, example);
+    public <T> T queryByExampleForObject(Example<T> example) {
+        List<T> result = queryByExample(example);
         if (result == null || result.size() == 0)
             return null;
         return result.get(0);
     }
 
-    public <T> List<T> querySelectiveByExample(Class<T> clazz, Args args, Example example) {
+    public <T> List<T> queryByExample(Args args, Example<T> example) {
         example.setArgs(args.toString());
-        return querySelectiveByExample(clazz, example);
+        return queryByExample(example);
     }
 
-    public <T> List<T> querySelectiveByExample(Class<T> clazz, Example example) {
-        BaseMapper baseMapper = _getMapper(clazz);
+    public <T> List<T> queryByExample(Example<T> example) {
+        BaseMapper baseMapper = _getMapperByExample(example);
         if (baseMapper != null)
             return baseMapper.querySelectiveByExample(example);
         return null;
     }
 
-    public List<Map<String, String>> querySelective(String sql, Object... params) {
+    /* 一般用于连表查询，使用的是 spring jdbc */
+    public List<Map<String, String>> query(String sql, Object... params) {
         return jdbcTemplate.query(deal(sql, params), new ResultSetExtractor<List<Map<String, String>>>() {
             @Override
             public List<Map<String, String>> extractData(ResultSet resultSet) throws SQLException, DataAccessException {
@@ -109,12 +115,8 @@ public class MapperTemplate {
         });
     }
 
-    public <T> T querySelectiveForObject(Class<T> clazz, String sql, Object... params) {
-        List<T> result = querySelective(clazz, sql, params);
-        return result.size() == 0 ? null : result.get(0);
-    }
-
-    public Map<String, String> querySelectiveForObject(String sql, Object... params) {
+    /* 一般用于连表查询，使用的是 spring jdbc */
+    public Map<String, String> queryForObject(String sql, Object... params) {
         return jdbcTemplate.query(deal(sql, params), new ResultSetExtractor<Map<String, String>>() {
             @Override
             public Map<String, String> extractData(ResultSet resultSet) throws SQLException, DataAccessException {
@@ -193,6 +195,11 @@ public class MapperTemplate {
 
     public <T> int updateByExample(T record, Example<T> example) {
         return _getMapperByExample(example).updateByExample(record, example);
+    }
+
+    public <T> T selectByExampleForObject(Example<T> example) {
+        List<T> result=selectByExample(example);
+        return result.size()==0?null:result.get(0);
     }
 
     public <T> List<T> selectByExample(Example<T> example) {
