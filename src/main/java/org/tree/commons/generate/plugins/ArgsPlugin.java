@@ -1,22 +1,20 @@
 package org.tree.commons.generate.plugins;
 
 import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.DefaultJavaFormatter;
 import org.mybatis.generator.api.dom.java.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author er_dong_chen
  * @date 18-12-14
  */
 public class ArgsPlugin extends PluginAdapter {
-    private Map<String, List<String>> modelArgs = new HashMap<>();
+    private Map<String, Map<String, String>> modelArgs = new HashMap<>();
 
     @Override
     public boolean validate(List<String> list) {
@@ -26,11 +24,11 @@ public class ArgsPlugin extends PluginAdapter {
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         String modelName = topLevelClass.getType().getFullyQualifiedName();
-        List<Field> fields = topLevelClass.getFields();
-        List<String> modelFileds = new ArrayList<>();
-        for (Field field : fields)
-            modelFileds.add(field.getName());
-        modelArgs.put(modelName, modelFileds);
+        Map<String, String> modelFields = new LinkedHashMap<>();
+        for (IntrospectedColumn column : introspectedTable.getAllColumns())
+            /* 类中属性名：数据库中字段名*/
+            modelFields.put(column.getJavaProperty(), column.getActualColumnName());
+        modelArgs.put(modelName, modelFields);
         return true;
     }
 
@@ -42,7 +40,7 @@ public class ArgsPlugin extends PluginAdapter {
         InitializationBlock initializationBlock;
         Field field;
         Method method;
-        for (Map.Entry<String, List<String>> entry : modelArgs.entrySet()) {
+        for (Map.Entry<String, Map<String, String>> entry : modelArgs.entrySet()) {
             String type = entry.getKey() + "Args";
             topLevelClass = new TopLevelClass(type);
             topLevelClass.setVisibility(JavaVisibility.PUBLIC);
@@ -50,22 +48,22 @@ public class ArgsPlugin extends PluginAdapter {
             topLevelClass.setSuperClass("Args");
 
             initializationBlock = new InitializationBlock();
-            for (String modelField : entry.getValue()) {
+            for (Map.Entry<String, String> modelField : entry.getValue().entrySet()) {
                 if ("TABLE".equals(modelField))
                     continue;
 
-                field = new Field(modelField, new FullyQualifiedJavaType("Arg"));
-                field.setInitializationString(String.format("new Arg(\"%s\")", modelField));
+                field = new Field(modelField.getKey(), new FullyQualifiedJavaType("Arg"));
+                field.setInitializationString(String.format("new Arg(\"%s\")", modelField.getValue()));
                 field.setVisibility(JavaVisibility.PRIVATE);
                 topLevelClass.addField(field);
 
-                initializationBlock.addBodyLine(String.format("args.add(%s);", modelField));
+                initializationBlock.addBodyLine(String.format("args.add(%s);", modelField.getKey()));
 
-                method = new Method(String.format("set%s", _headUp(modelField)));
+                method = new Method(String.format("set%s", _headUp(modelField.getKey())));
                 method.setVisibility(JavaVisibility.PUBLIC);
                 method.setReturnType(new FullyQualifiedJavaType(type));
                 method.addParameter(new Parameter(new FullyQualifiedJavaType("boolean"), "contained"));
-                method.addBodyLine(String.format("this.%s.setContained(contained);", modelField));
+                method.addBodyLine(String.format("this.%s.setContained(contained);", modelField.getKey()));
                 method.addBodyLine("return this;");
                 topLevelClass.addMethod(method);
             }

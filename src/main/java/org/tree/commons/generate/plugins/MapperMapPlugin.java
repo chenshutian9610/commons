@@ -8,14 +8,16 @@ import org.mybatis.generator.api.dom.java.*;
 import org.tree.commons.support.mapper.MapperMap;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author er_dong_chen
  * @date 2018/12/13
  */
 public class MapperMapPlugin extends PluginAdapter {
-    private static List<String> mapperList = new ArrayList<>();
+    private static Set<String> mapperList = new HashSet<>();
 
     @Override
     public boolean validate(List<String> warnings) {

@@ -1,5 +1,6 @@
 package org.tree.commons.generate.generator;
 
+import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.config.Configuration;
 import org.mybatis.generator.config.Context;
 import org.mybatis.generator.config.ModelType;
@@ -35,8 +36,7 @@ public class CodeGenerator {
         Resource resource = new ClassPathResource(mybatisConfig);
         Configuration config = new ConfigurationParser(warnings).parseConfiguration(resource.getFile());
         DefaultShellCallback callback = new DefaultShellCallback(true);
-        MyBatisGeneratorExtension generator = new MyBatisGeneratorExtension(config, callback, warnings);
-//        MyBatisGenerator generator = new MyBatisGenerator(config, callback, warnings);
+        MyBatisGenerator generator = new MyBatisGenerator(config, callback, warnings);
         generator.setXmlMerge(false);
         generator.generate(_getTableConfigurations(tableMap));
     }

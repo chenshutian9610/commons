@@ -1,9 +1,13 @@
 package org.tree.commons.generate.plugins;
 
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
-import org.mybatis.generator.api.dom.xml.*;
+import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.api.dom.xml.Element;
+import org.mybatis.generator.api.dom.xml.XmlElement;
 
 import java.util.List;
 
@@ -70,13 +74,25 @@ public class InsertSelectiveWithGeneratedKeyPlugin extends PluginAdapter {
     }
 
     private String _getPrivateKeyName(IntrospectedTable table) {
-        return table.getPrimaryKeyColumns().size() == 0 ? null : table.getPrimaryKeyColumns().get(0).getJavaProperty();
+        String id = table.getPrimaryKeyColumns().size() == 0 ? null : table.getPrimaryKeyColumns().get(0).getJavaProperty();
+        if(id==null){
+            for(IntrospectedColumn column:table.getBaseColumns()){
+                if(column.isAutoIncrement()&&column.getActualColumnName().endsWith("id")){
+                    id=column.getJavaProperty();
+                    return id;
+                }
+            }
+        }
+        return id;
     }
 
     /****************************** Mapper *******************************/
 
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        String id = _getPrivateKeyName(introspectedTable);
+        if (id == null)
+            return true;
         String model = _getModelName(interfaze);
         Method insertSelectiveWithGeneratedKey = new Method("insertSelectiveWithGeneratedKey");
         insertSelectiveWithGeneratedKey.addParameter(new Parameter(new FullyQualifiedJavaType(model), model.toLowerCase()));

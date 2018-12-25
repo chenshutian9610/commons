@@ -24,6 +24,7 @@ public class BatchInsertPlugin extends PluginAdapter {
         addBatchInsertMethod(interfaze, introspectedTable);
         return super.clientGenerated(interfaze, topLevelClass, introspectedTable);
     }
+
     /**
      * 修改Mapper.xml
      */
@@ -34,6 +35,9 @@ public class BatchInsertPlugin extends PluginAdapter {
     }
 
     private void addBatchInsertMethod(Interface interfaze, IntrospectedTable introspectedTable) {
+        if (introspectedTable.getPrimaryKeyColumns().size() == 0)
+            return;
+
         // 设置需要导入的类
         Set<FullyQualifiedJavaType> importedTypes = new TreeSet<FullyQualifiedJavaType>();
         importedTypes.add(FullyQualifiedJavaType.getNewListInstance());
@@ -65,12 +69,15 @@ public class BatchInsertPlugin extends PluginAdapter {
         interfaze.addImportedTypes(importedTypes);
         interfaze.addMethod(ibsmethod);
     }
+
     public void addBatchInsertSelectiveXml(Document document, IntrospectedTable introspectedTable) {
         List<IntrospectedColumn> columns = introspectedTable.getAllColumns();
         //获得要自增的列名
-        String incrementField = introspectedTable.getPrimaryKeyColumns().get(0).getActualColumnName();
+        String incrementField = _getPrivateKeyName(introspectedTable);
+        if (incrementField == null)
+            return;
         String orgIncrementField = incrementField;
-        if(incrementField!=null){
+        if (incrementField != null) {
             incrementField = incrementField.toUpperCase();
         }
         XmlElement javaPropertyAndDbType = new XmlElement("trim");
@@ -94,14 +101,14 @@ public class BatchInsertPlugin extends PluginAdapter {
         for (IntrospectedColumn introspectedColumn : columns) {
             String columnName = introspectedColumn.getActualColumnName();
 //            if(!columnName.toUpperCase().equals(incrementField)){//不是自增字段的才会出现在批量插入中
-                XmlElement iftest=new XmlElement("if");
-                iftest.addAttribute(new Attribute("test","list[0]."+introspectedColumn.getJavaProperty()+"!=null"));
-                iftest.addElement(new TextElement(columnName+","));
-                trim1Element.addElement(iftest);
-                XmlElement trimiftest=new XmlElement("if");
-                trimiftest.addAttribute(new Attribute("test","item."+introspectedColumn.getJavaProperty()+"!=null"));
-                trimiftest.addElement(new TextElement("#{item." + introspectedColumn.getJavaProperty() + ",jdbcType=" + introspectedColumn.getJdbcTypeName() + "},"));
-                javaPropertyAndDbType.addElement(trimiftest);
+            XmlElement iftest = new XmlElement("if");
+            iftest.addAttribute(new Attribute("test", "list[0]." + introspectedColumn.getJavaProperty() + "!=null"));
+            iftest.addElement(new TextElement(columnName + ","));
+            trim1Element.addElement(iftest);
+            XmlElement trimiftest = new XmlElement("if");
+            trimiftest.addAttribute(new Attribute("test", "item." + introspectedColumn.getJavaProperty() + "!=null"));
+            trimiftest.addElement(new TextElement("#{item." + introspectedColumn.getJavaProperty() + ",jdbcType=" + introspectedColumn.getJdbcTypeName() + "},"));
+            javaPropertyAndDbType.addElement(trimiftest);
 //            }
         }
 
@@ -124,4 +131,16 @@ public class BatchInsertPlugin extends PluginAdapter {
         return true;
     }
 
+    private String _getPrivateKeyName(IntrospectedTable table) {
+        String id = table.getPrimaryKeyColumns().size() == 0 ? null : table.getPrimaryKeyColumns().get(0).getJavaProperty();
+        if (id == null) {
+            for (IntrospectedColumn column : table.getBaseColumns()) {
+                if (column.isAutoIncrement() && column.getActualColumnName().endsWith("id")) {
+                    id = column.getJavaProperty();
+                    return id;
+                }
+            }
+        }
+        return id;
+    }
 }

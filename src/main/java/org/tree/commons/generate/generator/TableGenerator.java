@@ -140,6 +140,9 @@ public class TableGenerator {
                 type = "CHAR(1)";
                 defaultValue = String.format("DEFAULT '%s'", defaultValue);
                 break;
+            case "bigdecimal":
+                type = "DECIMAL(19,2)";
+                defaultValue = String.format("DEFAULT '0'");
         }
 
         if (id.length() != 0 || unique.length() != 0)
