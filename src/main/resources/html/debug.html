@@ -45,13 +45,14 @@
         var result = s.length != 0 ? str + "?" + s.join("&&") : str;
         url.innerHTML = "go to:&emsp;&emsp;&nbsp;&nbsp;" + result;
         p.innerHTML = "返回结果:"
-        // location=result;
         $.ajax({
             url: result,
             success: function (data) {
-                console.log('------ result ------')
+                console.clear()
+                console.log('------ ' + result + ' ------')
                 console.log(data)
-                p.innerHTML = "返回结果:&emsp;" + JSON.stringify(data)
+                var str = JSON.stringify(data)
+                p.innerHTML = "返回结果:&emsp;" + ( str.length() > 100? '请点击 F12 打开控制台查看' : str )
             }
         });
     }
