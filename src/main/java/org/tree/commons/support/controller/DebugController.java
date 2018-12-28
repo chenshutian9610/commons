@@ -1,14 +1,14 @@
 package org.tree.commons.support.controller;
 
 import com.alibaba.fastjson.JSON;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.tree.commons.annotation.Comment;
+import org.tree.commons.support.BaseConfig;
+import org.tree.commons.utils.PackageUtils;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.AnnotatedElement;
@@ -26,17 +26,21 @@ import java.util.List;
  * <p>  由于要获取入参名, 所以必须使用 java 8 外加 -parameters 编译选项, 否则无法获取正确的入参名
  */
 @RestController
-public class DebugController {
-    @Autowired
-    private ControllerConfig config;
+public class DebugController extends BaseConfig {
+
+    @Value("${debug.packageToScan:}")
+    private String packageToScan;
 
     @RequestMapping("/value.do")
     public List<ClassInfo> value() throws Exception {
-        if (!config.isDebugEnable())
+        if (!debugEnable)
             throw new Exception("现在不处于 debug 模式");
-        if (config.getPackageToScan().length() == 0)
+
+        if (packageToScan.length() == 0)
             throw new Exception("使用此功能需要配置 debug.packageToScan !");
-        List<Class> classes = scanController(config.getPackageToScan());
+
+        List<Class> classes = PackageUtils.scan(packageToScan);
+//        List<Class> classes = scanController(packageToScan);
         List<String> ignoreFields = Arrays.asList("TABLE");
         List<ClassInfo> values = getClassInfo(classes, ignoreFields);
         return values;
@@ -62,18 +66,18 @@ public class DebugController {
         return new String(sb).getBytes("utf-8");
     }
 
-    /* 获取 controller 下的类 */
-    public List<Class> scanController(String packageToScan) throws Exception {
-        File dir = new ClassPathResource(packageToScan.replace(".", "/")).getFile();
-        String[] files = dir.list();
-        List<String> list = new ArrayList<>(files.length);
-        for (String str : files)
-            list.add(packageToScan + "." + str.split("\\.")[0]);
-        List<Class> result = new ArrayList<>(files.length);
-        for (String str : list)
-            result.add(Class.forName(str));
-        return result;
-    }
+//    /* 获取 controller 下的类 */
+//    public List<Class> scanController(String packageToScan) throws Exception {
+//        File dir = new ClassPathResource(packageToScan.replace(".", "/")).getFile();
+//        String[] files = dir.list();
+//        List<String> list = new ArrayList<>(files.length);
+//        for (String str : files)
+//            list.add(packageToScan + "." + str.split("\\.")[0]);
+//        List<Class> result = new ArrayList<>(files.length);
+//        for (String str : list)
+//            result.add(Class.forName(str));
+//        return result;
+//    }
 
     /* 通过反射获取 url 和接口属性 */
     public static List<ClassInfo> getClassInfo(List<Class> classes, List<String> ignoreFields) {

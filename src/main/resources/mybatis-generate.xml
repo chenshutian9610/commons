@@ -27,6 +27,9 @@
         <plugin type="org.tree.commons.generate.plugins.BatchInsertPlugin"/>
         <!-- 不建议用
         <plugin type="org.tree.commons.template.plugins.GenerateBaseMapperAndExamplePlugin"/> -->
+
+        <!--generator.define.plugins-->
+
         <commentGenerator>
             <property name="suppressAllComments" value="true"/>
         </commentGenerator>

@@ -1,11 +1,10 @@
 package org.tree.commons.support.service.message;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
-import org.tree.commons.support.service.ServiceConfig;
 
 import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
@@ -17,30 +16,32 @@ import javax.mail.internet.MimeMessage;
  */
 @Component
 public class EmailSender {
-    @Autowired
-    private ServiceConfig config;
     private JavaMailSenderImpl sender;
+
+    @Value("${email.host:}")
+    private String emailHost;
+    @Value("${email.port:25}")  // 25 是 SMTP 标准端口
+    private int emailPort;
+    @Value("${email.username:}")
+    private String emailUsername;
+    @Value("${email.password:}")
+    private String emailPassword;
 
     public EmailSender() {
         sender = new JavaMailSenderImpl();
     }
 
-    public EmailSender(ServiceConfig config) {
-        this.config = config;
-        sender = new JavaMailSenderImpl();
-    }
-
     @PostConstruct
     public void init() {
-        sender.setHost(config.getEmailHost());
-        sender.setPort(config.getEmailPort());
-        sender.setUsername(config.getEmailUsername());
-        sender.setPassword(config.getEmailPassword());
+        sender.setHost(emailHost);
+        sender.setPort(emailPort);
+        sender.setUsername(emailUsername);
+        sender.setPassword(emailPassword);
     }
 
     public void send(String to, String subject, String text) {
-        if (config.getEmailUsername().matches("\\w+@.*\\.com")) {
-            send(config.getEmailUsername(), to, subject, text);
+        if (emailUsername.matches("\\w+@.*\\.com")) {
+            send(emailUsername, to, subject, text);
             return;
         }
         System.err.println("error: 需要输入己方的邮箱地址 !");
@@ -57,8 +58,8 @@ public class EmailSender {
     }
 
     public void sendHtml(String to, String subject, String html) throws MessagingException {
-        if (config.getEmailUsername().matches("\\w+@.*\\.com")) {
-            sendHtml(config.getEmailUsername(), to, subject, html);
+        if (emailUsername.matches("\\w+@.*\\.com")) {
+            sendHtml(emailUsername, to, subject, html);
             return;
         }
         System.err.println("error: 需要输入己方的邮箱地址 !");

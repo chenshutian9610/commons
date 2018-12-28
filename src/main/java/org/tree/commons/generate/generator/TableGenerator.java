@@ -1,14 +1,22 @@
 package org.tree.commons.generate.generator;
 
+import org.mybatis.generator.config.Configuration;
+import org.mybatis.generator.config.Context;
+import org.mybatis.generator.config.ModelType;
+import org.mybatis.generator.config.TableConfiguration;
+import org.mybatis.generator.config.xml.ConfigurationParser;
+import org.mybatis.generator.internal.DefaultShellCallback;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.tree.commons.generate.annotation.Column;
 import org.tree.commons.generate.annotation.Table;
+import org.tree.commons.utils.MybatisXmlUtils;
+import org.tree.commons.utils.PackageUtils;
 import org.tree.commons.utils.PropertiesUtils;
 import org.tree.commons.utils.StringUtils;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -18,70 +26,84 @@ import java.util.*;
 
 /**
  * @author er_dong_chen
- * @date 2018/12/11
- * <p>
- * 可配置参数有 jdbc.driver, jdbc.url, jdbc.username, jdbc.password 和 packageToScan
+ * @date 2018/12/28
  */
 public class TableGenerator {
-    private Map<String, String> tableMap = new HashMap<>();
-    private List<String> scripts = new ArrayList<>();
+    /**
+     * 默认的配置文件名
+     * mybatis-generate.xml 可改
+     * generator.properties 必须有
+     */
+    private static final String CONFIG_PROPERTIES = "generator.properties";
+    private static final String CONFIG_XML = "mybatis-generate.xml";
+
     private Properties properties;
+    private Map<String, String> tableMap;
+    private List<String> scripts = new ArrayList<>();
 
-    public TableGenerator() throws Exception {
-        properties = PropertiesUtils.getProperties("generator.properties");
-        _init(properties.getProperty("packageToScan"));
+    public TableGenerator(String packageToScan) throws Exception {
+        tableMap = scanInit(packageToScan);
+        properties = PropertiesUtils.getProperties(CONFIG_PROPERTIES);
     }
 
-    public TableGenerator(String propertiesFile) throws Exception {
-        properties = PropertiesUtils.getProperties(propertiesFile);
-        _init(properties.getProperty("packageToScan"));
-    }
-
-    public void setPackageToScan(String packageToScan) throws Exception {
-        _init(packageToScan);
-    }
-
-    public Map<String, String> getTableMap() {
-        return tableMap;
-    }
-
-    public void generate() throws Exception {
+    /* 正向工程 */
+    public void forward() throws ClassNotFoundException, SQLException {
         if (scripts.size() == 0)
             return;
-        _execute(scripts);
+
+        String driver = properties.getProperty("jdbc.driver");
+        if (driver == null)
+            driver = "com.mysql.jdbc.Driver";
+
+        Class.forName(driver);
+        String url = properties.getProperty("jdbc.url");
+        String username = properties.getProperty("jdbc.username");
+        String password = properties.getProperty("jdbc.password");
+        Connection connection = DriverManager.getConnection(url, username, password);
+        Statement statement = connection.createStatement();
+        for (String script : scripts) {
+            System.out.println(script + "\n");
+            statement.execute(script);
+        }
     }
 
-    private Set<String> _getKeyWords() throws IOException {
-        Resource resource = new ClassPathResource("key-word.txt");
-        Scanner scanner = new Scanner(resource.getFile());
-        Set<String> keyWords = new HashSet<>(666);
-        while (scanner.hasNext())
-            keyWords.add(scanner.next());
-        return keyWords;
+    /* 逆向工程一号入口 */
+    public void reverse() throws Exception {
+        reverse(CONFIG_XML);
     }
 
-    private void _init(String packageToScan) throws Exception {
-        if (packageToScan == null)
+    /* 逆向工程二号入口 */
+    public void reverse(String mybatisConfig) throws Exception {
+        if (tableMap.size() == 0)
             return;
-        scripts.clear();
-        tableMap.clear();
-        Resource resource = new ClassPathResource(packageToScan.replace(".", "/"));
-        File dir = resource.getFile();
-        if (!dir.exists())
-            throw new Exception(String.format("路径 %s 不存在", dir.getCanonicalPath()));
-        String[] fileNames = dir.list();
-        Class clazz;
+
+        List<String> warnings = new ArrayList<String>();
+        InputStream in = MybatisXmlUtils.deal(mybatisConfig);
+        Configuration config = new ConfigurationParser(warnings).parseConfiguration(in);
+        DefaultShellCallback callback = new DefaultShellCallback(true);
+
+        /* 复制自 org.mybatis.generator.api.MyBatisGenerator，扩展了 xml 融合和表生成策略 */
+        MyBatisGeneratorExtension generator = new MyBatisGeneratorExtension(config, callback, warnings);
+        generator.setXmlMerge(false);
+        generator.generate(getTableConfigurations(tableMap));
+    }
+
+    /* 初始化 tableMap 和 scripts */
+    private Map<String, String> scanInit(String packageToScan) throws Exception {
+        if (packageToScan == null)
+            throw new Exception("packageToScan 无效！");
+
         Field[] fields;
         Table table;
         Column column;
-        String tableName, columnName, type, comment, defaultValue, unique, id, columnDefinition;
-        int length = 40;
-        Set<String> keyWords = _getKeyWords();
-        for (String name : fileNames) {
+        String tableName;
+        Set<String> keyWords = getKeyWords();
+        List<Class> clazzList = PackageUtils.scan(packageToScan);
+        Map<String, String> tableMap = new HashMap<>();
+        for (Class clazz : clazzList) {
+            String name = clazz.getSimpleName();
             List<String> columnDefinitions = new ArrayList<>();
             StringBuilder ddl = new StringBuilder();
-            name = name.substring(0, name.indexOf("."));
-            clazz = Class.forName(packageToScan + "." + name);
             fields = clazz.getDeclaredFields();
             table = (Table) clazz.getAnnotation(Table.class);
             if (table == null) continue;
@@ -90,7 +112,7 @@ public class TableGenerator {
                 column = (Column) field.getAnnotation(Column.class);
                 if (keyWords.contains(field.getName().toUpperCase()))
                     System.err.println(String.format("%s#%s 是关键字或保留字, 可能导致创建表不成功", name, field.getName()));
-                columnDefinitions.add(_getColumnDefinition(field, column).trim());
+                columnDefinitions.add(getColumnDefinition(field, column).trim());
             }
             System.out.println();
 
@@ -106,9 +128,21 @@ public class TableGenerator {
 
             tableMap.put(name, tableName);
         }
+        return tableMap;
     }
 
-    private String _getColumnDefinition(Field field, Column column) {
+    /* 读取 key-word.txt，获取 mysql 关键字（5.7） */
+    private Set<String> getKeyWords() throws IOException {
+        Resource resource = new ClassPathResource("key-word.txt");
+        Scanner scanner = new Scanner(resource.getFile());
+        Set<String> keyWords = new HashSet<>(666);
+        while (scanner.hasNext())
+            keyWords.add(scanner.next());
+        return keyWords;
+    }
+
+    /* 获取字段定义信息 */
+    private String getColumnDefinition(Field field, Column column) {
         String name = field.getName();
         String type = field.getType().getSimpleName();
         String defaultValue = "", comment = "", id = "", unique = "";
@@ -165,19 +199,17 @@ public class TableGenerator {
         return String.format("\t%s %s %s %s %s %s", name, type, defaultValue, unique, id, comment);
     }
 
-    private void _execute(List<String> scripts) throws ClassNotFoundException, SQLException {
-        String driver = properties.getProperty("jdbc.driver");
-        if (driver == null)
-            driver = "com.mysql.jdbc.Driver";
-        Class.forName(driver);
-        String url = properties.getProperty("jdbc.url");
-        String username = properties.getProperty("jdbc.username");
-        String password = properties.getProperty("jdbc.password");
-        Connection connection = DriverManager.getConnection(url, username, password);
-        Statement statement = connection.createStatement();
-        for (String script : scripts) {
-            System.out.println(script + "\n");
-            statement.execute(script);
+    /* 辅助方法, 用于获取 TableConfiguration 列表 */
+    private List<TableConfiguration> getTableConfigurations(Map<String, String> map) {
+        List<TableConfiguration> tableConfigurations = new ArrayList<>();
+        Context context = new Context(ModelType.CONDITIONAL);
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            TableConfiguration tc = new TableConfiguration(context);
+            tc.setDomainObjectName(entry.getKey());
+            tc.setMapperName(entry.getKey() + "Mapper");
+            tc.setTableName(entry.getValue());
+            tableConfigurations.add(tc);
         }
+        return tableConfigurations;
     }
 }

@@ -1,10 +1,9 @@
 package org.tree.commons.utils.auth;
 
 import javax.imageio.ImageIO;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.OutputStream;
 import java.util.Random;
 
 /**
@@ -12,8 +11,16 @@ import java.util.Random;
  * @date 2018/12/18
  */
 public class AuthCodePicture {
-    public static String generate(HttpServletResponse response) throws Exception {
-        int width = 80, height = 30;//定义验证码图片的大小
+    /**
+     * outputStream 可以是 response::getOutputStream, 但 response 需要下列代码（设置不缓存）
+     * <p>
+     * response.setContentType("image/jpeg");
+     * response.setHeader("Pragma", "no-cache");
+     * response.setHeader("Cache-Control", "no-cache");
+     * response.setDateHeader("Expires", 0);
+     */
+    public static String generate(OutputStream outputStream) throws Exception {
+        final int width = 80, height = 30;//定义验证码图片的大小
         BufferedImage buffImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);//在内存中创建图象
         Graphics2D g = buffImg.createGraphics();//为内存中要创建的图像生成画布，用于“作画”
 
@@ -54,30 +61,9 @@ public class AuthCodePicture {
         buffImg.flush();//清除缓冲的图片
         g.dispose();//释放资源
 
-//        OutputStream out = new FileOutputStream("D:\\Project\\template\\img\\newImg.jpeg");
-//        ImageIO.write(buffImg, "jpeg", out);
-
-//        session.setAttribute("randomCode", randomCode.toString());//把验证码set为属性
-
-        //设置页面不缓存
-        response.setContentType("image/jpeg");
-        response.setHeader("Pragma", "no-cache");
-        response.setHeader("Cache-Control", "no-cache");
-        response.setDateHeader("Expires", 0);
-
-        ServletOutputStream outputStream = response.getOutputStream();
         //使用支持jpeg格式的 ImageWriter 将一个图像写入 OutputStream。而在客户端的img标签通过src来从中提取出jpeg图片
         ImageIO.write(buffImg, "jpeg", outputStream);
         outputStream.close();
         return new String(randomCode);
-
-        /*
-        这两句代码用于解决报错：java.lang.IllegalStateException: getOutputStream() has already been called
-        由于jsp container在处理完成请求后会调用releasePageContet方法释放所用的PageContext object,
-        并且同时调用getWriter方法,由于getWriter方法与在jsp页面中使用流相关的getOutputStream方法冲突,
-        所以会造成这种异常
-        */
-//        out.clear();
-//        out = pageContext.pushBody();
     }
 }

@@ -2,9 +2,7 @@ package org.tree.commons.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author er_dong_chen
@@ -69,6 +67,28 @@ public class FileUtils {
         if (dir.getName().equals(name))
             return dir;
         return result;
+    }
+
+    /* 递归列出文件名 */
+    public static List<String> listFileNames(File dir){
+        List<File> files=listFiles(dir,new ArrayList<>());
+        List<String> fileNames=new ArrayList<>(files.size());
+        for(File file:files)
+            fileNames.add(file.getName());
+        return fileNames;
+    }
+
+    /* 递归列出文件对象 */
+    public static List<File> listFiles(File dir, List<File> list) {
+        if (dir.isDirectory()) {
+            System.out.println(String.format("扫描 %s", dir.getAbsolutePath()));
+            File[] files = dir.listFiles();
+            for (File file : files)
+                list = listFiles(file, list);
+            return list;
+        }
+        list.add(dir);
+        return list;
     }
 
     public static void main(String args[]) throws IOException {

@@ -5,9 +5,9 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.request.*;
 import com.alipay.api.response.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.tree.commons.support.service.ServiceConfig;
+import org.tree.commons.support.BaseConfig;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -17,26 +17,30 @@ import java.math.BigDecimal;
  * @date 18-10-26
  */
 @Component
-public class AliPayCore {
+public class AliPayCore extends BaseConfig {
     private AlipayClient alipayClient;
     public final static String DEV = "https://openapi.alipaydev.com/gateway.do";
     public final static String PROD = "https://openapi.alipay.com/gateway.do";
 
-    @Autowired
-    private ServiceConfig config;
+    @Value("${aliPay.appId:}")
+    private String appId;
+    @Value("${aliPay.aliPublicKey:}")
+    private String aliPublicKey;
+    @Value("${aliPay.privateKey:}")
+    private String privateKey;
+    @Value("${aliPay.url:}")
+    private String url;
 
     @PostConstruct
     public void init() {
-        boolean debugEnable = config.isDebugEnable();
-        String url = config.getAliPayUrl();
-        String appId = config.getAliPayAppId();
-        String aliPublicKey = config.getAliPublicKey();
-        String privateKey = config.getAliPayPrivateKey();
         if (url.length() == 0)
             url = debugEnable ? AliPayCore.DEV : AliPayCore.PROD;
+
         if (appId.length() == 0 || aliPublicKey.length() == 0 || privateKey.length() == 0)
             return;
-        alipayClient = new DefaultAlipayClient(url, appId, privateKey, "json", "utf-8", aliPublicKey, "RSA2");
+
+        alipayClient = new DefaultAlipayClient(url, appId, privateKey,
+                "json", "utf-8", aliPublicKey, "RSA2");
     }
 
     public AliPayCore() {

@@ -6,6 +6,14 @@ package org.tree.commons.utils;
  */
 public class StringUtils {
 
+    /* 是否有效 */
+    public static boolean isValid(String... strings) {
+        for (String string : strings)
+            if (string == null || string.length() == 0)
+                return false;
+        return true;
+    }
+
     /* camel & underline */
     public static String format(String str, boolean camel) {
         StringBuilder sb = new StringBuilder();
