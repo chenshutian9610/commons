@@ -8,6 +8,7 @@ import org.tree.commons.utils.PropertiesUtils;
 import org.tree.commons.utils.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -50,6 +51,15 @@ public class TableGenerator {
         _execute(scripts);
     }
 
+    private Set<String> _getKeyWords() throws IOException {
+        Resource resource = new ClassPathResource("key-word.txt");
+        Scanner scanner = new Scanner(resource.getFile());
+        Set<String> keyWords = new HashSet<>(666);
+        while (scanner.hasNext())
+            keyWords.add(scanner.next());
+        return keyWords;
+    }
+
     private void _init(String packageToScan) throws Exception {
         if (packageToScan == null)
             return;
@@ -66,6 +76,7 @@ public class TableGenerator {
         Column column;
         String tableName, columnName, type, comment, defaultValue, unique, id, columnDefinition;
         int length = 40;
+        Set<String> keyWords = _getKeyWords();
         for (String name : fileNames) {
             List<String> columnDefinitions = new ArrayList<>();
             StringBuilder ddl = new StringBuilder();
@@ -77,8 +88,11 @@ public class TableGenerator {
             tableName = table.name().length() == 0 ? StringUtils.format(name, false) : table.name();
             for (Field field : fields) {
                 column = (Column) field.getAnnotation(Column.class);
+                if (keyWords.contains(field.getName().toUpperCase()))
+                    System.err.println(String.format("%s#%s 是关键字或保留字, 可能导致创建表不成功", name, field.getName()));
                 columnDefinitions.add(_getColumnDefinition(field, column).trim());
             }
+            System.out.println();
 
             if (table.generate()) {
                 String drop = String.format("DROP TABLE IF EXISTS %s;", tableName);
@@ -152,7 +166,10 @@ public class TableGenerator {
     }
 
     private void _execute(List<String> scripts) throws ClassNotFoundException, SQLException {
-        Class.forName(properties.getProperty("jdbc.driver"));
+        String driver = properties.getProperty("jdbc.driver");
+        if (driver == null)
+            driver = "com.mysql.jdbc.Driver";
+        Class.forName(driver);
         String url = properties.getProperty("jdbc.url");
         String username = properties.getProperty("jdbc.username");
         String password = properties.getProperty("jdbc.password");

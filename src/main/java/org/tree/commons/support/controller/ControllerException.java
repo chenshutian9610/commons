@@ -20,6 +20,7 @@ public class ControllerException {
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public Map deal(Exception e) {
+        e.printStackTrace();
         Map map = new LinkedHashMap(3);
         map.put("code", -1);
         map.put("message", config.isDebugEnable() ? e.getMessage() : "未知错误");

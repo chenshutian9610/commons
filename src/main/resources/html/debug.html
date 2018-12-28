@@ -52,7 +52,7 @@
                 console.log('------ ' + result + ' ------')
                 console.log(data)
                 var str = JSON.stringify(data)
-                p.innerHTML = "返回结果:&emsp;" + ( str.length() > 100? '请点击 F12 打开控制台查看' : str )
+                p.innerHTML = "返回结果:&emsp;" + ( str.length > 100? '请点击 F12 打开控制台查看' : str )
             }
         });
     }

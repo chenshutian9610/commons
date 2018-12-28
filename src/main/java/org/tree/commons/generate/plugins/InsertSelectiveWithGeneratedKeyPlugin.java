@@ -1,6 +1,5 @@
 package org.tree.commons.generate.plugins;
 
-import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.*;
@@ -74,16 +73,7 @@ public class InsertSelectiveWithGeneratedKeyPlugin extends PluginAdapter {
     }
 
     private String _getPrivateKeyName(IntrospectedTable table) {
-        String id = table.getPrimaryKeyColumns().size() == 0 ? null : table.getPrimaryKeyColumns().get(0).getJavaProperty();
-        if(id==null){
-            for(IntrospectedColumn column:table.getBaseColumns()){
-                if(column.isAutoIncrement()&&column.getActualColumnName().endsWith("id")){
-                    id=column.getJavaProperty();
-                    return id;
-                }
-            }
-        }
-        return id;
+        return table.getPrimaryKeyColumns().size() == 0 ? null : table.getPrimaryKeyColumns().get(0).getJavaProperty();
     }
 
     /****************************** Mapper *******************************/
@@ -91,8 +81,11 @@ public class InsertSelectiveWithGeneratedKeyPlugin extends PluginAdapter {
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         String id = _getPrivateKeyName(introspectedTable);
-        if (id == null)
+        if (id == null) {
+            /* 理论上应该使用 addFileCommentLine 方法，但是其作用在类文件的第一行，不容易看到 */
+            interfaze.addAnnotation("/* 该表没有主键，或数据库驱动版本错误 */");
             return true;
+        }
         String model = _getModelName(interfaze);
         Method insertSelectiveWithGeneratedKey = new Method("insertSelectiveWithGeneratedKey");
         insertSelectiveWithGeneratedKey.addParameter(new Parameter(new FullyQualifiedJavaType(model), model.toLowerCase()));

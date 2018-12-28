@@ -10,6 +10,7 @@ import org.mybatis.generator.internal.DefaultShellCallback;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,5 +54,21 @@ public class CodeGenerator {
             tableConfigurations.add(tc);
         }
         return tableConfigurations;
+    }
+
+    private static Reader dealExpression(InputStream inputStream) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "utf-8"));
+        String currentLine, expression;
+        int start = 0, end = 0;
+        while ((currentLine = reader.readLine()) != null) {
+            while ((start = currentLine.indexOf("${", start)) != -1) {
+                end = currentLine.indexOf("}", end);
+                expression = currentLine.substring(start + 1, end);
+                if (expression.contains(":")) {
+                    currentLine.replace(String.format("${%s}", expression), expression.substring(expression.indexOf(":") + 1, end));
+                }
+            }
+        }
+        return reader;
     }
 }

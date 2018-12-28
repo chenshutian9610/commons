@@ -57,7 +57,7 @@ public class AuthCodePicture {
         buffImg.flush();//清除缓冲的图片
         g.dispose();//释放资源
 
-        OutputStream out = new FileOutputStream("D:\\Project\\generate\\img\\newImg.jpeg");
+        OutputStream out = new FileOutputStream("D:\\Project\\template\\img\\newImg.jpeg");
         ImageIO.write(buffImg, "jpeg", out);
 
 
