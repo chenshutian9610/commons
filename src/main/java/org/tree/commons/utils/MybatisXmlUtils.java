@@ -12,29 +12,61 @@ import java.util.Properties;
  * @date 2018/12/26
  */
 public class MybatisXmlUtils {
+    private static Properties properties = PropertiesUtils.getProperties("generator.properties");
+
     /* 自定义处理规则 */
-    public static InputStream deal(String configFile) throws IOException {
+    public static InputStream deal(String configFile) throws Exception {
         InputStream inputStream = new ClassPathResource(configFile).getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "utf-8"));
 
-        /* 1. 处理 ${name:defaultValue} 为 defaultValue */
-        String currentLine, expression, ordinary;
+
+        String currentLine, expression, ordinary, value;
         int start = 0, end;
         StringBuilder sb = new StringBuilder();
+        String rootPackage = properties.getProperty("generate.root.package");
+        String module = properties.getProperty("generate.module");
         while ((currentLine = reader.readLine()) != null) {
+            /* 1. 如果 root.package 不为空，则忽略 model.package 和 mapper.package */
+            if (StringUtils.isValid(rootPackage)) {
+                if (currentLine.contains("${generate.model.package}"))
+                    currentLine = currentLine.replace("${generate.model.package}",
+                            rootPackage + ".model");
+                else if (currentLine.contains("${generate.mapper.package}"))
+                    currentLine = currentLine.replace("${generate.mapper.package}",
+                            rootPackage + ".mapper");
+            }
+
+            /* 2. 如果 generate.module 不为空，则忽略 model.target 等变量 */
+            if (StringUtils.isValid(module)) {
+                // TODO: 2018/12/29
+                if (currentLine.matches(".*\\$\\{generate\\.java\\.target.*\\}.*"))
+                    currentLine = currentLine.replaceFirst("\\$\\{generate\\.java\\.target.*\\}",
+                            String.format("./%s/src/main/java", module));
+                else if(currentLine.matches(".*\\$\\{generate\\.xml\\.target.*\\}.*"))
+                    currentLine= currentLine.replaceFirst("\\$\\{generate\\.xml\\.target.*\\}",
+                            String.format("./%s/src/main/resources", module));
+            }
+
+            /* 3. 处理 ${variable} 和 ${variable:defaultValue} */
             end = 0;
             while ((start = currentLine.indexOf("${", start + 1)) != -1) {
                 end = currentLine.indexOf("}", end + 1);
                 expression = currentLine.substring(start + 2, end);
                 ordinary = String.format("${%s}", expression);
-                if (expression.contains(":"))
-                    currentLine = currentLine.replace(ordinary, expression.substring(expression.indexOf(":") + 1));
-
+                if (expression.contains(":")) {
+                    value = properties.getProperty(expression.substring(0, expression.indexOf(":")));
+                    currentLine = currentLine.replace(ordinary, value == null ? expression.substring(expression.indexOf(":") + 1) : value);
+                } else {
+                    value = properties.getProperty(expression);
+                    if (value != null)
+                        currentLine = currentLine.replace(ordinary, value);
+                    else throw new Exception(expression + " 没有配置");
+                }
             }
             sb.append(currentLine).append("\n");
         }
 
-        /* 2. 添加插件配置 */
+        /* 4. 添加插件配置 */
         String done = new String(sb);
         done = done.replace("<!--generator.define.plugins-->", getPlugins());
 
@@ -43,10 +75,9 @@ public class MybatisXmlUtils {
 
     private static String getPlugins() {
         /* 读取 plugin 配置 */
-        Properties properties = PropertiesUtils.getProperties("generator.properties");
-        String prefix = properties.getProperty("mybatis.plugin.prefix");
-        String names = properties.getProperty("mybatis.plugin.name");
-        String otherSupport = properties.getProperty("other-support.plugin");
+        String prefix = properties.getProperty("generate.mybatis.plugin.prefix");
+        String names = properties.getProperty("generate.mybatis.plugin");
+        String otherSupport = properties.getProperty("generate.other-support.plugin");
 
         /* 转化为 plugin list */
         List<String> plugins = new LinkedList<>();

@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
         "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
-    <properties resource="generator.properties"/>
+    <!--<properties resource="generator.properties"/>-->
     <context id="generateTables" targetRuntime="MyBatis3">
         <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
         <!--<plugin type="org.mybatis.generator.plugins.CachePlugin"></plugin>-->
@@ -40,13 +40,13 @@
         <javaTypeResolver>
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
-        <javaModelGenerator targetPackage="${model.package}" targetProject="${java.target:./src/main/java}">
+        <javaModelGenerator targetPackage="${generate.model.package}" targetProject="${generate.java.target:./src/main/java}">
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
-        <sqlMapGenerator targetPackage="${xml.dir:mapper}" targetProject="${xml.target:./src/main/resources}"/>
-        <javaClientGenerator type="XMLMAPPER" targetPackage="${mapper.package}"
-                             targetProject="${java.target:./src/main/java}">
-            <!--<property name="rootInterface" value="org.tree.faster.temp.BaseMapperaseMapper-->
+        <sqlMapGenerator targetPackage="${generate.xml.dir:mapper}" targetProject="${generate.xml.target:./src/main/resources}"/>
+        <javaClientGenerator type="XMLMAPPER" targetPackage="${generate.mapper.package}"
+                             targetProject="${generate.java.target:./src/main/java}">
+            <!--<property name="rootInterface" value="org.tree.faster.temp.BaseMapper-->
         </javaClientGenerator>
         <table tableName="it won't be use"/>
     </context>

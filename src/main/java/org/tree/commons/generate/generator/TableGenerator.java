@@ -37,9 +37,18 @@ public class TableGenerator {
     private static final String CONFIG_PROPERTIES = "generator.properties";
     private static final String CONFIG_XML = "mybatis-generate.xml";
 
+    /* 自定义 mybatis 配置文件 */
+    private boolean custom = true;
+
     private Properties properties;
     private Map<String, String> tableMap;
     private List<String> scripts = new ArrayList<>();
+
+    public TableGenerator(Class clazz) throws Exception {
+        String packageToScan = clazz.getPackage().getName();
+        tableMap = scanInit(packageToScan);
+        properties = PropertiesUtils.getProperties(CONFIG_PROPERTIES);
+    }
 
     public TableGenerator(String packageToScan) throws Exception {
         tableMap = scanInit(packageToScan);
@@ -69,6 +78,7 @@ public class TableGenerator {
 
     /* 逆向工程一号入口 */
     public void reverse() throws Exception {
+        custom = false;
         reverse(CONFIG_XML);
     }
 
@@ -77,8 +87,11 @@ public class TableGenerator {
         if (tableMap.size() == 0)
             return;
 
+        /* 如果是自定义配置文件，则不能使用 ${variable:defaultValue} 这种格式（mybatis 本身不支持）*/
+        InputStream in = custom ?
+                new ClassPathResource(mybatisConfig).getInputStream() : MybatisXmlUtils.deal(mybatisConfig);
+
         List<String> warnings = new ArrayList<String>();
-        InputStream in = MybatisXmlUtils.deal(mybatisConfig);
         Configuration config = new ConfigurationParser(warnings).parseConfiguration(in);
         DefaultShellCallback callback = new DefaultShellCallback(true);
 
@@ -134,7 +147,7 @@ public class TableGenerator {
     /* 读取 key-word.txt，获取 mysql 关键字（5.7） */
     private Set<String> getKeyWords() throws IOException {
         Resource resource = new ClassPathResource("key-word.txt");
-        Scanner scanner = new Scanner(resource.getFile());
+        Scanner scanner = new Scanner(resource.getInputStream(), "utf-8");
         Set<String> keyWords = new HashSet<>(666);
         while (scanner.hasNext())
             keyWords.add(scanner.next());
