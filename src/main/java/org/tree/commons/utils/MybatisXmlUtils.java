@@ -12,10 +12,17 @@ import java.util.Properties;
  * @date 2018/12/26
  */
 public class MybatisXmlUtils {
-    private static Properties properties = PropertiesUtils.getProperties("generator.properties");
+    private static String configProperties = "generator.properties";
+    private static Properties properties;
+
+    public static void setConfigProperties(String configProperties) {
+        MybatisXmlUtils.configProperties = configProperties;
+    }
 
     /* 自定义处理规则 */
     public static InputStream deal(String configFile) throws Exception {
+        properties = PropertiesUtils.getProperties(configProperties);
+
         InputStream inputStream = new ClassPathResource(configFile).getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "utf-8"));
 
@@ -42,8 +49,8 @@ public class MybatisXmlUtils {
                 if (currentLine.matches(".*\\$\\{generate\\.java\\.target.*\\}.*"))
                     currentLine = currentLine.replaceFirst("\\$\\{generate\\.java\\.target.*\\}",
                             String.format("./%s/src/main/java", module));
-                else if(currentLine.matches(".*\\$\\{generate\\.xml\\.target.*\\}.*"))
-                    currentLine= currentLine.replaceFirst("\\$\\{generate\\.xml\\.target.*\\}",
+                else if (currentLine.matches(".*\\$\\{generate\\.xml\\.target.*\\}.*"))
+                    currentLine = currentLine.replaceFirst("\\$\\{generate\\.xml\\.target.*\\}",
                             String.format("./%s/src/main/resources", module));
             }
 

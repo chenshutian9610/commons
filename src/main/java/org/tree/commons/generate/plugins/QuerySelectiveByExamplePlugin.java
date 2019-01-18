@@ -92,6 +92,7 @@ public class QuerySelectiveByExamplePlugin extends PluginAdapter {
     public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         Field field = new Field("args", new FullyQualifiedJavaType("java.lang.String"));
         field.setVisibility(JavaVisibility.PRIVATE);
+        field.setInitializationString("\"*\"");
         topLevelClass.addField(field);
 
         Method getArgs = new Method("getArgs");

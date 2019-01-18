@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.tree.commons.annotation.Comment;
+import org.tree.commons.annotation.Ignore;
 import org.tree.commons.support.BaseConfig;
 import org.tree.commons.utils.PackageUtils;
 
@@ -40,7 +41,6 @@ public class DebugController extends BaseConfig {
             throw new Exception("使用此功能需要配置 debug.packageToScan !");
 
         List<Class> classes = PackageUtils.scan(packageToScan);
-//        List<Class> classes = scanController(packageToScan);
         List<String> ignoreFields = Arrays.asList("TABLE");
         List<ClassInfo> values = getClassInfo(classes, ignoreFields);
         return values;
@@ -66,19 +66,6 @@ public class DebugController extends BaseConfig {
         return new String(sb).getBytes("utf-8");
     }
 
-//    /* 获取 controller 下的类 */
-//    public List<Class> scanController(String packageToScan) throws Exception {
-//        File dir = new ClassPathResource(packageToScan.replace(".", "/")).getFile();
-//        String[] files = dir.list();
-//        List<String> list = new ArrayList<>(files.length);
-//        for (String str : files)
-//            list.add(packageToScan + "." + str.split("\\.")[0]);
-//        List<Class> result = new ArrayList<>(files.length);
-//        for (String str : list)
-//            result.add(Class.forName(str));
-//        return result;
-//    }
-
     /* 通过反射获取 url 和接口属性 */
     public static List<ClassInfo> getClassInfo(List<Class> classes, List<String> ignoreFields) {
         List<ClassInfo> classInfos = new ArrayList<>(classes.size());
@@ -100,15 +87,17 @@ public class DebugController extends BaseConfig {
                     methodInfo.setComment(_getComment(method));
                     Parameter[] parameters = method.getParameters();
                     for (Parameter parameter : parameters) {
-                        String comment = null;
                         if (_testBaseType(parameter.getType())) {   // 是否基本类型
                             args.add(new ArgInfo(parameter.getName(), _getComment(parameter)));
                             continue;
                         }
+                        if(parameter.isAnnotationPresent(Ignore.class))
+                            continue;
                         Field[] MethodInfo = parameter.getType().getDeclaredFields();
                         for (Field field : MethodInfo) {
-                            if (!ignoreFields.contains(field.getName()))
-                                args.add(new ArgInfo(field.getName(), _getComment(field)));
+                            if (ignoreFields.contains(field.getName()) && field.isAnnotationPresent(Ignore.class))
+                                continue;
+                            args.add(new ArgInfo(field.getName(), _getComment(field)));
                         }
                     }
                     methodInfos.add(methodInfo);

@@ -29,13 +29,9 @@ import java.util.*;
  * @date 2018/12/28
  */
 public class TableGenerator {
-    /**
-     * 默认的配置文件名
-     * mybatis-generate.xml 可改
-     * generator.properties 必须有
-     */
-    private static final String CONFIG_PROPERTIES = "generator.properties";
-    private static final String CONFIG_XML = "mybatis-generate.xml";
+    /* 默认的配置文件名 */
+    private String configProperties = "generator.properties";
+    private String configXml = "mybatis-generate.xml";
 
     /* 自定义 mybatis 配置文件 */
     private boolean custom = true;
@@ -47,18 +43,26 @@ public class TableGenerator {
     public TableGenerator(Class clazz) throws Exception {
         String packageToScan = clazz.getPackage().getName();
         tableMap = scanInit(packageToScan);
-        properties = PropertiesUtils.getProperties(CONFIG_PROPERTIES);
     }
 
     public TableGenerator(String packageToScan) throws Exception {
         tableMap = scanInit(packageToScan);
-        properties = PropertiesUtils.getProperties(CONFIG_PROPERTIES);
+    }
+
+    public void setConfigProperties(String configProperties) {
+        this.configProperties = configProperties;
+    }
+
+    public void setConfigXml(String configXml) {
+        this.configXml = configXml;
     }
 
     /* 正向工程 */
     public void forward() throws ClassNotFoundException, SQLException {
         if (scripts.size() == 0)
             return;
+        if (properties == null)
+            properties = PropertiesUtils.getProperties(configProperties);
 
         String driver = properties.getProperty("jdbc.driver");
         if (driver == null)
@@ -79,7 +83,7 @@ public class TableGenerator {
     /* 逆向工程一号入口 */
     public void reverse() throws Exception {
         custom = false;
-        reverse(CONFIG_XML);
+        reverse(configXml);
     }
 
     /* 逆向工程二号入口 */
@@ -88,8 +92,13 @@ public class TableGenerator {
             return;
 
         /* 如果是自定义配置文件，则不能使用 ${variable:defaultValue} 这种格式（mybatis 本身不支持）*/
-        InputStream in = custom ?
-                new ClassPathResource(mybatisConfig).getInputStream() : MybatisXmlUtils.deal(mybatisConfig);
+        InputStream in = null;
+        if (custom) {
+            in = new ClassPathResource(mybatisConfig).getInputStream();
+        } else {
+            MybatisXmlUtils.setConfigProperties(configProperties);
+            in = MybatisXmlUtils.deal(mybatisConfig);
+        }
 
         List<String> warnings = new ArrayList<String>();
         Configuration config = new ConfigurationParser(warnings).parseConfiguration(in);
@@ -99,6 +108,8 @@ public class TableGenerator {
         MyBatisGeneratorExtension generator = new MyBatisGeneratorExtension(config, callback, warnings);
         generator.setXmlMerge(false);
         generator.generate(getTableConfigurations(tableMap));
+
+        in.close();
     }
 
     /* 初始化 tableMap 和 scripts */
@@ -188,6 +199,8 @@ public class TableGenerator {
                 break;
             case "boolean":
                 type = "BIT";
+                defaultValue = String.format("DEFAULT b'%s'",
+                        "true".equals(defaultValue) || "1".equals(defaultValue) ? "1" : "0");
                 break;
             case "string":
                 type = String.format("VARCHAR(%d)", length);

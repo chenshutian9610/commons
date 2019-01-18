@@ -1,4 +1,4 @@
-package org.tree.commons.utils.secure;
+package org.tree.commons.utils.security;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;

@@ -16,18 +16,13 @@ import java.util.TreeSet;
 import static org.mybatis.generator.internal.util.messages.Messages.getString;
 
 public class BatchInsertPlugin extends PluginAdapter {
-    /**
-     * 修改Mapper类
-     */
+
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         addBatchInsertMethod(interfaze, introspectedTable);
         return super.clientGenerated(interfaze, topLevelClass, introspectedTable);
     }
 
-    /**
-     * 修改Mapper.xml
-     */
     @Override
     public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
         addBatchInsertSelectiveXml(document, introspectedTable);
@@ -35,9 +30,6 @@ public class BatchInsertPlugin extends PluginAdapter {
     }
 
     private void addBatchInsertMethod(Interface interfaze, IntrospectedTable introspectedTable) {
-        if (introspectedTable.getPrimaryKeyColumns().size() == 0)
-            return;
-
         // 设置需要导入的类
         Set<FullyQualifiedJavaType> importedTypes = new TreeSet<FullyQualifiedJavaType>();
         importedTypes.add(FullyQualifiedJavaType.getNewListInstance());
@@ -72,14 +64,6 @@ public class BatchInsertPlugin extends PluginAdapter {
 
     public void addBatchInsertSelectiveXml(Document document, IntrospectedTable introspectedTable) {
         List<IntrospectedColumn> columns = introspectedTable.getAllColumns();
-        //获得要自增的列名
-        String incrementField = _getPrivateKeyName(introspectedTable);
-        if (incrementField == null)
-            return;
-        String orgIncrementField = incrementField;
-        if (incrementField != null) {
-            incrementField = incrementField.toUpperCase();
-        }
         XmlElement javaPropertyAndDbType = new XmlElement("trim");
         javaPropertyAndDbType.addAttribute(new Attribute("prefix", " ("));
         javaPropertyAndDbType.addAttribute(new Attribute("suffix", ")"));
@@ -89,18 +73,12 @@ public class BatchInsertPlugin extends PluginAdapter {
         insertBatchElement.addAttribute(new Attribute("id", "insertBatchSelective"));
         insertBatchElement.addAttribute(new Attribute("parameterType", "java.util.List"));
 
-//        if(orgIncrementField != null && !"".equals(orgIncrementField)){
-//            insertBatchElement.addAttribute(new Attribute("useGeneratedKeys", "true"));
-//            insertBatchElement.addAttribute(new Attribute("keyProperty", orgIncrementField));
-//        }
-
         XmlElement trim1Element = new XmlElement("trim");
         trim1Element.addAttribute(new Attribute("prefix", "("));
         trim1Element.addAttribute(new Attribute("suffix", ")"));
         trim1Element.addAttribute(new Attribute("suffixOverrides", ","));
         for (IntrospectedColumn introspectedColumn : columns) {
             String columnName = introspectedColumn.getActualColumnName();
-//            if(!columnName.toUpperCase().equals(incrementField)){//不是自增字段的才会出现在批量插入中
             XmlElement iftest = new XmlElement("if");
             iftest.addAttribute(new Attribute("test", "list[0]." + introspectedColumn.getJavaProperty() + "!=null"));
             iftest.addElement(new TextElement(columnName + ","));
@@ -109,7 +87,6 @@ public class BatchInsertPlugin extends PluginAdapter {
             trimiftest.addAttribute(new Attribute("test", "item." + introspectedColumn.getJavaProperty() + "!=null"));
             trimiftest.addElement(new TextElement("#{item." + introspectedColumn.getJavaProperty() + ",jdbcType=" + introspectedColumn.getJdbcTypeName() + "},"));
             javaPropertyAndDbType.addElement(trimiftest);
-//            }
         }
 
         XmlElement foreachElement = new XmlElement("foreach");
@@ -129,18 +106,5 @@ public class BatchInsertPlugin extends PluginAdapter {
     @Override
     public boolean validate(List<String> warnings) {
         return true;
-    }
-
-    private String _getPrivateKeyName(IntrospectedTable table) {
-        String id = table.getPrimaryKeyColumns().size() == 0 ? null : table.getPrimaryKeyColumns().get(0).getJavaProperty();
-        if (id == null) {
-            for (IntrospectedColumn column : table.getBaseColumns()) {
-                if (column.isAutoIncrement() && column.getActualColumnName().endsWith("id")) {
-                    id = column.getJavaProperty();
-                    return id;
-                }
-            }
-        }
-        return id;
     }
 }

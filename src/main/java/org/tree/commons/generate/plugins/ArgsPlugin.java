@@ -12,6 +12,8 @@ import java.util.*;
 /**
  * @author er_dong_chen
  * @date 18-12-14
+ *
+ * <p> 服务于 QuerySelectiveByExamplePlugin
  */
 public class ArgsPlugin extends PluginAdapter {
     private Map<String, Map<String, String>> modelArgs = new HashMap<>();
@@ -76,6 +78,17 @@ public class ArgsPlugin extends PluginAdapter {
             method.addBodyLine("\targ.setContained(true);");
             method.addBodyLine("return this;");
             topLevelClass.addMethod(method);
+
+//            method = new Method("init");
+//            method.addParameter(new Parameter(new FullyQualifiedJavaType("String"), "args", true));
+//            method.setReturnType(new FullyQualifiedJavaType(type));
+//            method.setStatic(true);
+//            method.setVisibility(JavaVisibility.PUBLIC);
+//            type = type.substring(type.lastIndexOf(".") + 1);
+//            method.addBodyLine(String.format("%s result = new %s();", type, type));
+//            method.addBodyLine("result.init0(args);");
+//            method.addBodyLine("return result;");
+//            topLevelClass.addMethod(method);
 
             javaFile = new GeneratedJavaFile(topLevelClass, context.getJavaModelGeneratorConfiguration().getTargetProject(), new DefaultJavaFormatter());
             javaFiles.add(javaFile);
