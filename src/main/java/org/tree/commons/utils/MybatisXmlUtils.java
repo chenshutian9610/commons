@@ -10,6 +10,8 @@ import java.util.Properties;
 /**
  * @author er_dong_chen
  * @date 2018/12/26
+ * <p>
+ * 通过 generator.properties 中的配置修改 mybatis-generator.xml
  */
 public class MybatisXmlUtils {
     private static String configProperties = "generator.properties";

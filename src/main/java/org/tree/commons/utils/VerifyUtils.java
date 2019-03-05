@@ -10,6 +10,8 @@ import static java.util.stream.Collectors.toMap;
 /**
  * @author er_dong_chen
  * @date 2019/1/14
+ * <p>
+ * 对 spring mvc 的 @Valid 和 BindingResult 进行验证
  */
 public class VerifyUtils {
     public static String getErrorString(BindingResult result) {

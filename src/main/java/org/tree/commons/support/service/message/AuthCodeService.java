@@ -11,15 +11,16 @@ import java.util.Map;
 /**
  * @author er_dong_chen
  * @date 2018/12/17
+ * <p>
+ * 验证码服务
  */
-@Comment("验证码服务")
 @Service
 public class AuthCodeService {
     private Map<String, String> cache = new HashMap<>(32);
 
-    @Autowired
+    @Autowired(required = false)
     private EmailSender emailSender;
-    @Autowired
+    @Autowired(required = false)
     private ShortMessageSender shortMessageSender;
 
     public AuthCodeService() {
@@ -30,10 +31,14 @@ public class AuthCodeService {
         this.shortMessageSender = shortMessageSender;
     }
 
-    @Comment("发送验证码")
+    /* 发送验证码 */
     public boolean sendAuthCode(String to) {
+        if (to == null)
+            return false;
+
         String code = RandomUtils.number(4);
         boolean success = true;
+
         if (to.matches("\\w+@.*\\.com"))
             emailSender.send(to, "验证码", code);
         else if (to.matches("\\d+"))
@@ -46,7 +51,7 @@ public class AuthCodeService {
         return success;
     }
 
-    @Comment("校对验证码")
+    /* 校对验证码 */
     public boolean confirmAuthCode(String to, String code) {
         boolean success = true;
         if (to == null || code == null || !code.equals(cache.get(to)))

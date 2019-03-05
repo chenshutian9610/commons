@@ -1,5 +1,7 @@
 package org.tree.commons.utils;
 
+import java.util.Collection;
+
 /**
  * @author er_dong_chen
  * @date 2018/12/22
@@ -14,7 +16,7 @@ public class StringUtils {
         return true;
     }
 
-    /* camel & underline */
+    /* 驼峰或下划线 */
     public static String format(String str, boolean camel) {
         StringBuilder sb = new StringBuilder();
         if (camel) {
@@ -37,10 +39,33 @@ public class StringUtils {
         return new String(sb);
     }
 
-    /* upper & down */
+    /* 开头大写或小写 */
     public static String capital(String str, boolean upper) {
         String pre = str.substring(0, 1);
         String last = str.substring(1);
         return (upper ? pre.toUpperCase() : pre.toLowerCase()) + last;
+    }
+
+    /* String::join */
+    public static String join(String separator, String... str) {
+        if (str.length == 0)
+            return "";
+        StringBuilder sb = new StringBuilder();
+        for (String s : str) {
+            sb.append(s).append(separator);
+        }
+        sb.delete(sb.length() - separator.length(), sb.length());
+        return sb.toString();
+    }
+
+    public static String join(String separator, Collection<String> str) {
+        if (str.size() == 0)
+            return "";
+        StringBuilder sb = new StringBuilder();
+        for (String s : str) {
+            sb.append(s).append(separator);
+        }
+        sb.delete(sb.length() - separator.length(), sb.length());
+        return sb.toString();
     }
 }

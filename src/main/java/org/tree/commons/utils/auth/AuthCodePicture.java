@@ -27,14 +27,15 @@ public class AuthCodePicture {
         //画一个白色矩形，作为验证码背景
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, width, height);
+
         //画一个黑色矩形边框
         g.setColor(Color.BLACK);
         g.drawRect(0, 0, width - 1, height - 1);
 
         //画40条灰色的随机干扰线
         g.setColor(Color.GRAY);
-        Random random = new Random();        //设置随机种子
-        for (int i = 0; i < 40; i++) {        //设置40条干扰线
+        Random random = new Random();           //设置随机种子
+        for (int i = 0; i < 40; i++) {          //设置40条干扰线
             int x1 = random.nextInt(width);
             int y1 = random.nextInt(height);
             int x2 = random.nextInt(10);//返回0到10之间一个随机数
@@ -53,13 +54,13 @@ public class AuthCodePicture {
             int red = random.nextInt(255);
             int green = random.nextInt(255);
             int blue = random.nextInt(255);
-            g.setColor(new Color(red, green, blue));   //获得一个随机红蓝绿的配合颜色
+            g.setColor(new Color(red, green, blue));    //获得一个随机红蓝绿的配合颜色
             g.drawString(strRand, 13 * i + 6, 16);//把该数字用画笔在画布画出，并指定数字的坐标
-            randomCode.append(strRand);//把该数字加到缓存字符串中。用于等会生成验证码字符串set到session中用于校对
+            randomCode.append(strRand);                 //把该数字加到缓存字符串中。用于等会生成验证码字符串set到session中用于校对
         }
 
-        buffImg.flush();//清除缓冲的图片
-        g.dispose();//释放资源
+        buffImg.flush();    //清除缓冲的图片
+        g.dispose();        //释放资源
 
         //使用支持jpeg格式的 ImageWriter 将一个图像写入 OutputStream。而在客户端的img标签通过src来从中提取出jpeg图片
         ImageIO.write(buffImg, "jpeg", outputStream);

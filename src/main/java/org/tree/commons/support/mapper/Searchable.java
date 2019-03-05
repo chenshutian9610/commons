@@ -2,8 +2,8 @@ package org.tree.commons.support.mapper;
 
 /**
  * @author er_dong_chen
- * @date 18-12-14
+ * @date 2019/3/5
  */
-public interface Args<T> {
-    String getTableName();
+public interface Searchable {
+    String getName();
 }

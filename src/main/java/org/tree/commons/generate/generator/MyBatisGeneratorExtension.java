@@ -31,7 +31,7 @@ import java.util.*;
  * 添加一个 xmlMerge 属性，用于操作生成的 xml 文件是否和原文件融合
  * ps：原来的 MyBatisGenerator 将此选项写死，每次都是融合，不覆盖
  * <p>
- * 增加一个 template(List<TableConfiguration>) 方法，使得可以通过代码添加表
+ * 增加一个 generate(List<TableConfiguration>) 方法，使得可以通过代码添加表
  */
 class MyBatisGeneratorExtension {
     private Configuration configuration;

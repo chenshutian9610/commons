@@ -17,16 +17,13 @@
         <!-- template entity时，生成hashcode和equals方法
         <plugin type="org.mybatis.generator.plugins.EqualsHashCodePlugin" /> -->
         <!-- my plugins -->
+        <plugin type="org.tree.commons.generate.plugins.SearchMapperPlugin"/>
         <plugin type="org.tree.commons.generate.plugins.QuerySelectivePlugin"/>
-        <plugin type="org.tree.commons.generate.plugins.QuerySelectiveByExamplePlugin"/>
         <plugin type="org.tree.commons.generate.plugins.InsertSelectiveWithGeneratedKeyPlugin"/>
         <plugin type="org.tree.commons.generate.plugins.ModelCommentPlugin"/>
         <plugin type="org.tree.commons.generate.plugins.MapperMapPlugin"/>
         <plugin type="org.tree.commons.generate.plugins.GenericDealPlugin"/>
-        <plugin type="org.tree.commons.generate.plugins.ArgsPlugin"/>
         <plugin type="org.tree.commons.generate.plugins.BatchInsertPlugin"/>
-        <!-- 不建议用
-        <plugin type="org.tree.commons.template.plugins.GenerateBaseMapperAndExamplePlugin"/> -->
 
         <!--generator.define.plugins-->
 
