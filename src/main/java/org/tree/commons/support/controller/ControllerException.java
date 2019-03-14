@@ -17,12 +17,8 @@ public class ControllerException extends BaseConfig {
 
     @ExceptionHandler(Exception.class)
     @ResponseBody
-    public Map deal(Exception e) {
+    public Result deal(Exception e) {
         e.printStackTrace();
-        Map map = new LinkedHashMap(3);
-        map.put("code", -1);
-        map.put("message", debugEnable ? e.getMessage() : "未知错误");
-        map.put("success", false);
-        return map;
+        return new Result(false, debugEnable ? e.getMessage() : "未知错误");
     }
 }

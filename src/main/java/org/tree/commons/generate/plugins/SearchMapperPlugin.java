@@ -24,11 +24,12 @@ public class SearchMapperPlugin extends PluginAdapter {
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles() {
         List<GeneratedJavaFile> javaFiles = new ArrayList<>(1);
         String targetPackage = context.getJavaClientGeneratorConfiguration().getTargetPackage();
+        String targetProject = context.getJavaModelGeneratorConfiguration().getTargetProject();
         Interface searchMapper = new Interface(targetPackage + ".SearchMapper");
         searchMapper.addImportedType(new FullyQualifiedJavaType("org.tree.commons.support.mapper.UnionSearchMapper"));
         searchMapper.addSuperInterface(new FullyQualifiedJavaType("UnionSearchMapper"));
         searchMapper.setVisibility(JavaVisibility.PUBLIC);
-        GeneratedJavaFile javaFile = new GeneratedJavaFile(searchMapper, targetPackage, new DefaultJavaFormatter());
+        GeneratedJavaFile javaFile = new GeneratedJavaFile(searchMapper, targetProject, new DefaultJavaFormatter());
         javaFiles.add(javaFile);
         return javaFiles;
     }

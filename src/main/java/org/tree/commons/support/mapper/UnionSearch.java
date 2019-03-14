@@ -49,6 +49,17 @@ public class UnionSearch {
         return this;
     }
 
+    public void setColumnAlias(Map<Searchable, String> aliases) {
+        aliases.forEach((k, v) -> {
+            String alias = String.format("%s %s", k.getName(), v);
+            if (columns.contains(k.getName())) {
+                columns = columns.replace(k.getName(), alias);
+            } else {
+                columns += "," + alias;
+            }
+        });
+    }
+
     @Override
     public String toString() {
         StringBuilder queryString = new StringBuilder();
@@ -62,7 +73,6 @@ public class UnionSearch {
             queryString.append(limit);
         return queryString.toString();
     }
-
 
     public List<Map<?, ?>> runBy(UnionSearchMapper mapper) {
         return mapper.query(toString());

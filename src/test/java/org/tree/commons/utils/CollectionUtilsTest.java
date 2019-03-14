@@ -10,7 +10,7 @@ public class CollectionUtilsTest {
 
     @Test
     public void testOf() {
-        List<Integer> list = CollectionUtils.of(1, 3, 5, 7, 9);
+        List<Integer> list = CollectionUtils.listOf(1, 3, 5, 7, 9);
         list.forEach(System.out::println);
 
         Set<Integer> set = CollectionUtils.of(HashSet::new, 100, 200, 300, 400);

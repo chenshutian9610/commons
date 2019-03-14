@@ -1,7 +1,7 @@
 package org.tree.commons.utils.img;
 
 import org.testng.annotations.Test;
-import org.tree.commons.utils.auth.AuthCodePicture;
+import org.tree.commons.utils.AuthCodePicture;
 
 import java.io.File;
 import java.io.FileOutputStream;

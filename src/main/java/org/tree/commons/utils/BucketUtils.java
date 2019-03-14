@@ -19,12 +19,12 @@ public class BucketUtils {
         private Map<K, List<V>> bucket = new HashMap<>();
 
         private InnerBucket(K key, V value) {
-            bucket.put(key, CollectionUtils.of(value));
+            bucket.put(key, CollectionUtils.listOf(value));
         }
 
         public InnerBucket<K, V> add(K key, V value) {
             if (bucket.get(key) == null) {
-                bucket.put(key, CollectionUtils.of(value));
+                bucket.put(key, CollectionUtils.listOf(value));
                 return this;
             }
             bucket.get(key).add(value);

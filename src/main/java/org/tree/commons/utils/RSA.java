@@ -1,4 +1,4 @@
-package org.tree.commons.utils.security;
+package org.tree.commons.utils;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
@@ -22,7 +22,8 @@ public class RSA {
 
     public static final String CHARSET = "UTF-8";
     public static final String RSA_ALGORITHM = "RSA";
-
+    public static final String PUBLIC_KEY = "publicKey";
+    public static final String PRIVATE_KEY = "privateKey";
 
     public static Map<String, String> createKeys(int keySize) {
         //为RSA算法创建一个KeyPairGenerator对象
@@ -56,7 +57,7 @@ public class RSA {
      * @param publicKey 密钥字符串（经过base64编码）
      * @throws Exception
      */
-    public static RSAPublicKey getPublicKey(String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private static RSAPublicKey getPublicKey(String publicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         //通过X509编码的Key指令获得公钥对象
         KeyFactory keyFactory = KeyFactory.getInstance(RSA_ALGORITHM);
         X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(Base64.decodeBase64(publicKey));
@@ -70,7 +71,7 @@ public class RSA {
      * @param privateKey 密钥字符串（经过base64编码）
      * @throws Exception
      */
-    public static RSAPrivateKey getPrivateKey(String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private static RSAPrivateKey getPrivateKey(String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         //通过PKCS#8编码的Key指令获得私钥对象
         KeyFactory keyFactory = KeyFactory.getInstance(RSA_ALGORITHM);
         PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(Base64.decodeBase64(privateKey));
@@ -82,11 +83,12 @@ public class RSA {
      * 公钥加密
      *
      * @param data
-     * @param publicKey
+     * @param publicKeyStr
      * @return
      */
-    public static String publicEncrypt(String data, RSAPublicKey publicKey) {
+    public static String publicEncrypt(String data, String publicKeyStr) {
         try {
+            RSAPublicKey publicKey = getPublicKey(publicKeyStr);
             Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
             return Base64.encodeBase64URLSafeString(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET), publicKey.getModulus().bitLength()));
@@ -99,11 +101,12 @@ public class RSA {
      * 私钥解密
      *
      * @param data
-     * @param privateKey
+     * @param privateKeyStr
      * @return
      */
-    public static String privateDecrypt(String data, RSAPrivateKey privateKey) {
+    public static String privateDecrypt(String data, String privateKeyStr) {
         try {
+            RSAPrivateKey privateKey = getPrivateKey(privateKeyStr);
             Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, Base64.decodeBase64(data), privateKey.getModulus().bitLength()), CHARSET);
@@ -116,11 +119,12 @@ public class RSA {
      * 私钥加密
      *
      * @param data
-     * @param privateKey
+     * @param privateKeyStr
      * @return
      */
-    public static String privateEncrypt(String data, RSAPrivateKey privateKey) {
+    public static String privateEncrypt(String data, String privateKeyStr) {
         try {
+            RSAPrivateKey privateKey = getPrivateKey(privateKeyStr);
             Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, privateKey);
             return Base64.encodeBase64URLSafeString(rsaSplitCodec(cipher, Cipher.ENCRYPT_MODE, data.getBytes(CHARSET), privateKey.getModulus().bitLength()));
@@ -133,11 +137,12 @@ public class RSA {
      * 公钥解密
      *
      * @param data
-     * @param publicKey
+     * @param publicKeyStr
      * @return
      */
-    public static String publicDecrypt(String data, RSAPublicKey publicKey) {
+    public static String publicDecrypt(String data, String publicKeyStr) {
         try {
+            RSAPublicKey publicKey = getPublicKey(publicKeyStr);
             Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, publicKey);
             return new String(rsaSplitCodec(cipher, Cipher.DECRYPT_MODE, Base64.decodeBase64(data), publicKey.getModulus().bitLength()), CHARSET);

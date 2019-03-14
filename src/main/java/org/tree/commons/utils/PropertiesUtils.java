@@ -15,19 +15,12 @@ public class PropertiesUtils {
     /* 读取指定 properties 文件 */
     public static Properties getProperties(String path) {
         Properties properties = new Properties();
-        try{
+        try {
             InputStream in = new ClassPathResource(path).getInputStream();
             properties.load(in);
-        }catch (IOException e){
+        } catch (IOException e) {
+            throw new RuntimeException(String.format("路径 %s 错误", path));
         }
         return properties;
-    }
-
-    public static File getFile(String path) {
-        try {
-            return new ClassPathResource(path).getFile();
-        } catch (IOException e) {
-            return null;
-        }
     }
 }

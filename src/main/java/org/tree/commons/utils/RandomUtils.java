@@ -15,8 +15,4 @@ public class RandomUtils {
         }
         return new String(sb);
     }
-
-    private static String string(int size) {
-        return null;
-    }
 }
