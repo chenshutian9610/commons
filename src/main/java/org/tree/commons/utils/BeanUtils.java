@@ -1,7 +1,7 @@
 package org.tree.commons.utils;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Set;
 
 /**
  * @author er_dong_chen
@@ -55,21 +55,5 @@ public class BeanUtils {
             }
         }
         return result;
-    }
-
-    /* 将对象转为 Map（非空字段）*/
-    public static Map<String,String> getMap(Object object) {
-        Map<String,String> map=new HashMap<>();
-        Field[]fields=object.getClass().getDeclaredFields();
-        Object value;
-        for(Field field:fields){
-            field.setAccessible(true);
-            try{
-                value=field.get(object);
-                if(value!=null)
-                    map.put(field.getName(),String.valueOf(value));
-            }catch (Exception e){break;}
-        }
-        return map;
     }
 }

@@ -36,13 +36,16 @@ public class ModelCommentPlugin extends PluginAdapter {
             annotation = context.getJavaModelGeneratorConfiguration().getTargetPackage() + ".Comment";
         }
         topLevelClass.addImportedType(new FullyQualifiedJavaType(annotation));
-        topLevelClass.addAnnotation(getAnnotationString(annotation, introspectedTable.getTableConfiguration().getTableName()));
-        Field tableName = new Field("TABLE", new FullyQualifiedJavaType("String"));
-        tableName.setVisibility(JavaVisibility.PUBLIC);
-        tableName.setFinal(true);
-        tableName.setStatic(true);
-        tableName.setInitializationString("\"" + introspectedTable.getTableConfiguration().getTableName() + "\"");
-        topLevelClass.addField(tableName);
+
+//        topLevelClass.addAnnotation(getAnnotationString(annotation, introspectedTable.getTableConfiguration().getTableName()));
+
+//        Field tableName = new Field("TABLE", new FullyQualifiedJavaType("String"));
+//        tableName.setVisibility(JavaVisibility.PUBLIC);
+//        tableName.setFinal(true);
+//        tableName.setStatic(true);
+//        tableName.setInitializationString("\"" + introspectedTable.getTableConfiguration().getTableName() + "\"");
+//        topLevelClass.addField(tableName);
+
         Map<String, String> comments = getColumnComment(introspectedTable);
         List<Field> fields = topLevelClass.getFields();
         String comment;

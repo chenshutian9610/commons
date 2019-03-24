@@ -13,4 +13,8 @@ import java.util.Map;
 public interface UnionSearchMapper {
     @Select("${queryString}")
     List<Map<?, ?>> query(@Param("queryString") String queryString);
+
+
+    @Select("${queryString}")
+    Long count(@Param("queryString") String queryString);
 }

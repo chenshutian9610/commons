@@ -1,6 +1,8 @@
 package org.tree.commons.utils;
 
 import java.util.Collection;
+import java.util.StringJoiner;
+import java.util.function.Function;
 
 /**
  * @author er_dong_chen
@@ -46,26 +48,28 @@ public class StringUtils {
         return (upper ? pre.toUpperCase() : pre.toLowerCase()) + last;
     }
 
-    /* String::join */
-    public static String join(String separator, String... str) {
-        if (str.length == 0)
-            return "";
-        StringBuilder sb = new StringBuilder();
-        for (String s : str) {
-            sb.append(s).append(separator);
-        }
-        sb.delete(sb.length() - separator.length(), sb.length());
-        return sb.toString();
+
+    /**
+     * String::join 只能针对 String 对象，这里相当于对 join 的扩展
+     * 可以对对象中的某一字段进行 join，也可以普通地对 String 等原始类型进行 join（原始类型指的是包装类）
+     *
+     * @param separator
+     * @param objects
+     * @param transition 转换规则，可选参数，不使用则使用对象的 toString 进行 join
+     * @param <T>
+     * @return
+     */
+    public static <T> String join(String separator, T[] objects, Function<T, String>... transition) {
+        StringJoiner joiner = new StringJoiner(separator);
+        for (T object : objects)
+            joiner.add(transition.length == 0 ? object.toString() : transition[0].apply(object));
+        return joiner.toString();
     }
 
-    public static String join(String separator, Collection<String> str) {
-        if (str.size() == 0)
-            return "";
-        StringBuilder sb = new StringBuilder();
-        for (String s : str) {
-            sb.append(s).append(separator);
-        }
-        sb.delete(sb.length() - separator.length(), sb.length());
-        return sb.toString();
+    public static <T> String join(String separator, Collection<T> objects, Function<T, String>... transition) {
+        StringJoiner joiner = new StringJoiner(separator);
+        for (T object : objects)
+            joiner.add(transition.length == 0 ? object.toString() : transition[0].apply(object));
+        return joiner.toString();
     }
 }

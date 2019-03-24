@@ -6,4 +6,5 @@ package org.tree.commons.support.mapper;
  */
 public interface Searchable {
     String getName();
+    String getTableName();
 }

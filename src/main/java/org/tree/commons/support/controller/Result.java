@@ -1,6 +1,5 @@
 package org.tree.commons.support.controller;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -8,9 +7,13 @@ import java.util.Map;
  * @date 2019/1/14
  */
 public class Result {
+    public static final String PARAMETER_MISSING = "参数缺失";
+    public static final String PASSWORD_ERROR = "密码错误";
+    public static final String AUTH_CODE_ERROR="验证码错误";
+
     private boolean success;
     private String message;
-    private Map response = new HashMap();
+    private Map<String, ?> response;
 
     public Result() {
     }
@@ -19,12 +22,16 @@ public class Result {
         this.success = success;
     }
 
-    public Result(boolean success, String message) {
-        this.success = success;
+    public Result(String message) {
         this.message = message;
     }
 
-    public Result(boolean success, String message, Map response) {
+    public Result(Map response) {
+        this.success = true;
+        this.response = response;
+    }
+
+    public Result(boolean success, String message, Map<String, ?> response) {
         this.success = success;
         this.message = message;
         this.response = response;
@@ -46,11 +53,7 @@ public class Result {
         this.message = message;
     }
 
-    public Map getResponse() {
+    public Map<String, ?> getResponse() {
         return response;
-    }
-
-    public void addResponseData(String key, Object response) {
-        this.response.put(key, response);
     }
 }

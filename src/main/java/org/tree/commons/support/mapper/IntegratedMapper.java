@@ -17,12 +17,18 @@ public class IntegratedMapper {
     @Autowired
     private MapperMap map;
 
-    public <T> T querySelectForObject(Args<T> args, Example<T> example) {
+    public <T> T selectForFirst(Example<T> example) {
+        List<T> result = selectByExample(example);
+        return result.size() == 0 ? null : result.get(0);
+    }
+
+    public <T> T querySelectiveForFirst(Args<T> args, Example<T> example) {
         List<T> result = getMapperByExample(example).querySelective(args, example);
-        if (result.size() == 1)
-            return result.get(0);
-        else
-            throw new RuntimeException("querySelectForObject 查询到的数据不止一个");
+        return result.size() == 0 ? null : result.get(0);
+//        if (result.size() == 1)
+//            return result.get(0);
+//        else
+//            throw new RuntimeException("querySelectForObject 查询到的数据不止一个");
     }
 
     public <T> List<T> querySelective(Args<T> args, Example<T> example) {
@@ -80,11 +86,6 @@ public class IntegratedMapper {
 
     public <T> int updateByExample(T record, Example<T> example) {
         return getMapperByExample(example).updateByExample(record, example);
-    }
-
-    public <T> T selectByExampleForObject(Example<T> example) {
-        List<T> result = selectByExample(example);
-        return result.size() == 0 ? null : result.get(0);
     }
 
     public <T> List<T> selectByExample(Example<T> example) {

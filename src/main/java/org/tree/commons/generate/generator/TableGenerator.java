@@ -186,16 +186,16 @@ public class TableGenerator {
         switch (type.toLowerCase()) {
             case "long":
                 type = "BIGINT";
-                defaultValue = "DEFAULT '0'";
+                defaultValue = String.format("DEFAULT '%s'", defaultValue.length() == 0 ? "0" : defaultValue);
                 break;
             case "int":
             case "integer":
                 type = "INTEGER";
-                defaultValue = "DEFAULT '0'";
+                defaultValue = String.format("DEFAULT '%s'", defaultValue.length() == 0 ? "0" : defaultValue);
                 break;
             case "byte":
                 type = "TINYINT";
-                defaultValue = "DEFAULT '0'";
+                defaultValue = String.format("DEFAULT '%s'", defaultValue.length() == 0 ? "0" : defaultValue);
                 break;
             case "boolean":
                 type = "BIT";
@@ -216,7 +216,7 @@ public class TableGenerator {
                 break;
             case "bigdecimal":
                 type = "DECIMAL(19,2)";
-                defaultValue = String.format("DEFAULT '0'");
+                defaultValue = String.format("DEFAULT '%s'", defaultValue.length() == 0 ? "0" : defaultValue);
         }
 
         if (id.length() != 0 || unique.length() != 0)

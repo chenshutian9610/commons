@@ -1,4 +1,4 @@
-package org.tree.commons.generate.plugins;
+package org.tree.commons.generate.plugins.old;
 
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;

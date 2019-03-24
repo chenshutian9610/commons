@@ -1,27 +1,40 @@
 package org.tree.commons.support.mapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tree.commons.utils.MapUtils;
+import org.tree.commons.utils.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * @author er_dong_chen
  * @date 2019/3/5
  */
 public class UnionSearch {
+    private Logger logger = LoggerFactory.getLogger(UnionSearch.class);
+
     private final String select = "SELECT %s FROM %s WHERE %s ";
     private final String selectDistinct = "SELECT DISTINCTROW %s FROM %s WHERE %s ";
 
     private String columns = "*";
-    private String tables;
+    private Set<String> tables = new HashSet<>();
     private Criteria criteria;
     private String orderBy;
+    private String groupBy;
     private String limit;
     private boolean distinct;
+    private long totalCount;
+
+    private UnionSearchMapper mapper;
+
+    public UnionSearch(UnionSearchMapper mapper) {
+        this.mapper = mapper;
+    }
+
+    public long getTotalCount() {
+        return totalCount;
+    }
 
     public UnionSearch distinct() {
         distinct = true;
@@ -29,13 +42,14 @@ public class UnionSearch {
     }
 
     public UnionSearch selectColumns(Args<?>... args) {
-        columns = Arrays.stream(args).map(Args::toString).collect(Collectors.joining(","));
-        tables = Arrays.stream(args).map(Args::getTableName).collect(Collectors.joining(","));
+        columns = StringUtils.join(",", args);
+        for (Args<?> arg : args)
+            tables.add(arg.getTableName());
         return this;
     }
 
     public Criteria createCriteria() {
-        criteria = new Criteria();
+        criteria = new Criteria(tables);
         return criteria;
     }
 
@@ -44,20 +58,42 @@ public class UnionSearch {
         return this;
     }
 
+    public UnionSearch orderByCount(Searchable column, boolean asc) {
+        orderBy = String.format("ORDER BY count(%s) %s ", column.getName(), asc ? "ASC" : "DESC");
+        return this;
+    }
+
+    public UnionSearch groupBy(Searchable column) {
+        groupBy = String.format("group by %s ", column.getName());
+        return this;
+    }
+
     public UnionSearch limit(int start, int length) {
         limit = String.format("LIMIT %s,%s ", start, length);
         return this;
     }
 
-    public void setColumnAlias(Map<Searchable, String> aliases) {
-        aliases.forEach((k, v) -> {
-            String alias = String.format("%s %s", k.getName(), v);
-            if (columns.contains(k.getName())) {
-                columns = columns.replace(k.getName(), alias);
-            } else {
-                columns += "," + alias;
-            }
-        });
+//    public void setColumnAlias(Map<Searchable, String> aliases) {
+//        aliases.forEach((k, v) -> {
+//            String alias = String.format("%s %s", k.getName(), v);
+//            columns = columns.contains(k.getName()) ?
+//                    columns.replace(k.getName(), alias) : String.format("%s,%s", columns, alias);
+//        });
+//    }
+
+    public UnionSearch addColumnAlias(String column, String alias) {
+        String definition = String.format("%s %s", column, alias);
+        columns = columns.contains(column) ?
+                columns.replace(column, definition) : String.format("%s,%s", columns, definition);
+        return this;
+    }
+
+    public UnionSearch addColumnAlias(Searchable column, String alias) {
+        return addColumnAlias(column.getName(), alias);
+    }
+
+    public final static String count(Searchable column) {
+        return String.format("count(%s)", column.getName());
     }
 
     @Override
@@ -67,6 +103,8 @@ public class UnionSearch {
                 String.join(",", columns),
                 String.join(",", tables),
                 criteria.toString()));
+        if (groupBy != null)
+            queryString.append(groupBy);
         if (orderBy != null)
             queryString.append(orderBy);
         if (limit != null)
@@ -74,14 +112,27 @@ public class UnionSearch {
         return queryString.toString();
     }
 
-    public List<Map<?, ?>> runBy(UnionSearchMapper mapper) {
-        return mapper.query(toString());
+    private String queryTotalCount() {
+        StringBuilder queryString = new StringBuilder();
+        queryString.append(String.format(distinct ? selectDistinct : select,
+                "count(*)",
+                String.join(",", tables),
+                criteria.toString()));
+        return queryString.toString();
     }
 
-    public <T> List<T> runBy(UnionSearchMapper mapper, Class<T> dto) {
-        List<Map<?, ?>> result = mapper.query(toString());
+    public List<Map<?, ?>> query() {
+        String sql = toString();
+        logger.info(String.format("连表查询：%s", sql));
+        List<Map<?, ?>> map = mapper.query(sql);
+        totalCount = limit == null ? map.size() : mapper.count(queryTotalCount());
+        return map;
+    }
+
+    public <T> List<T> query(Class<T> dto) {
+        List<Map<?, ?>> result = query();
         List<T> result2 = new ArrayList<>(result.size());
-        result.forEach(map -> result2.add(MapUtils.parse(map, dto)));
+        result.forEach(map -> result2.add(MapUtils.toObject(map, dto)));
         return result2;
     }
 
@@ -92,9 +143,15 @@ public class UnionSearch {
             AND, OR
         }
 
+        private Set<String> tables;
+
         private StringBuilder sb = new StringBuilder();
 
         private int flag;
+
+        public Criteria(Set<String> tables) {
+            this.tables = tables;
+        }
 
         public Criteria and(Searchable column, String definition) {
             sb.append(combine(DEAL.AND, false, column, definition));
@@ -146,16 +203,21 @@ public class UnionSearch {
             return this;
         }
 
+        /* UserColumn.user_id = 1 */
         private String combine(DEAL deal, boolean bracketStart, Searchable column, String definition) {
+            tables.add(column.getName().split("\\.")[0]);
             return sb.length() == 0 ?
-                    String.format("%s %s", column.getName(), definition) :
-                    String.format("%s %s%s %s ", deal, bracketStart ? "( " : "", column.getName(), definition);
+                    String.format(" %s %s", column.getName(), definition) :
+                    String.format(" %s %s%s %s ", deal, bracketStart ? "( " : "", column.getName(), definition);
         }
 
+        /* UserColumn.user.id = IDCardColumn.user.id */
         private String combine(DEAL deal, boolean bracketStart, Searchable column, String symbol, Searchable column2) {
+            tables.add(column.getName().split("\\.")[0]);
+            tables.add(column2.getName().split("\\.")[0]);
             return sb.length() == 0 ?
-                    String.format("%s %s %s ", column.getName(), symbol, column2.getName()) :
-                    String.format("%s %s%s %s %s ", deal, bracketStart ? "( " : "", column.getName(), symbol, column2.getName());
+                    String.format(" %s %s %s ", column.getName(), symbol, column2.getName()) :
+                    String.format(" %s %s%s %s %s ", deal, bracketStart ? "( " : "", column.getName(), symbol, column2.getName());
         }
 
         @Override

@@ -1,7 +1,7 @@
 package org.tree.commons.utils.img;
 
 import org.testng.annotations.Test;
-import org.tree.commons.utils.AuthCodePicture;
+import org.tree.commons.utils.PictureCode;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -14,7 +14,7 @@ public class AuthCodePictureTest {
     @Test
     public void testGenerate() throws Exception {
         File file = new File("D:\\Project\\template\\img\\test.jpg");
-        String code = AuthCodePicture.generate(new FileOutputStream(file));
+        String code = PictureCode.generate(new FileOutputStream(file));
         System.out.println(code);
     }
 }

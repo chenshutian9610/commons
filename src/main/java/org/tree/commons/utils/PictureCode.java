@@ -3,6 +3,7 @@ package org.tree.commons.utils;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Random;
 
@@ -10,7 +11,7 @@ import java.util.Random;
  * @author er_dong_chen
  * @date 2018/12/18
  */
-public class AuthCodePicture {
+public class PictureCode {
     /**
      * outputStream 可以是 response::getOutputStream, 但 response 需要下列代码（设置不缓存）
      * <p>
@@ -19,7 +20,7 @@ public class AuthCodePicture {
      * response.setHeader("Cache-Control", "no-cache");
      * response.setDateHeader("Expires", 0);
      */
-    public static String generate(OutputStream outputStream) throws Exception {
+    public static String generate(OutputStream outputStream) throws IOException {
         final int width = 80, height = 30;//定义验证码图片的大小
         BufferedImage buffImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);//在内存中创建图象
         Graphics2D g = buffImg.createGraphics();//为内存中要创建的图像生成画布，用于“作画”

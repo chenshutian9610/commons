@@ -130,6 +130,7 @@ public class Main {
 }
 
 /****************************** UserDao *******************************/
+
 @Component
 public class UserDao {
 
@@ -176,10 +177,10 @@ public class DaoTest {
     // from tb_user, tb_student 
     // where tb_user.id = 1 and tb_user.id = tb_student.id
     public NameDTO getNames() {
-        UnionSearch search = new UnionSearch();
+        UnionSearch search = new UnionSearch(mapper);
         search.selectColumns(new UserArgs().setUsername(true), new StudentArgs().setStudentName(true));
-        search.createCriteria().and(UserEnum.ID, "=1").and(StudentEnum.ID, "=", UserEnum.ID);
-        return search.runBy(searchMapper, NameDTO.class);
+        search.createCriteria().and(UserEnum.ID, "= 1").and(StudentEnum.ID, "=", UserEnum.ID);
+        return search.query(NameDTO.class);
     }
 }
 
@@ -219,17 +220,21 @@ public class EmailVO {
     // getter & setter
 }
 ```
-* AuthCodePicture
+* PictureCode
 > 生成图片验证码
 ```java
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
-    @RequestMapping("getPictureCode")
-    public void getPictureCode(HttpServletResponse response) {
-        AuthCodePicture.generate(response.getOutputStream());
-    }
+    @RequestMapping("/getPictureCode")
+        public void getPictureCode(HttpServletResponse response) throws IOException {
+            response.setContentType("image/jpeg");
+            response.setHeader("Pragma", "no-cache");
+            response.setHeader("Cache-Control", "no-cache");
+            response.setDateHeader("Expires", 0);
+            PictureCode.generate(response.getOutputStream());
+        }
 }
 ```
 * CollectionUtils / MapUtils / BucketUtils
@@ -268,6 +273,18 @@ public class RSATest {
         String text = RSA.privateDecrypt(ciphertext, keys.get(RSA.PRIVATE_KEY));
         
         System.out.println(String.format("密文：%s%n明文：%s", ciphertext, text));
+    }
+}
+```
+* PerformanceUtils
+```java
+// 性能测试
+public class MyTest {
+    @Test
+    public void test() {
+        PerformanceUtils.test(() -> {
+            // 测试的内容
+        });
     }
 }
 ```

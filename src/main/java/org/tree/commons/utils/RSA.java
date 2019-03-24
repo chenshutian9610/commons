@@ -20,8 +20,9 @@ import java.util.Map;
  */
 public class RSA {
 
-    public static final String CHARSET = "UTF-8";
-    public static final String RSA_ALGORITHM = "RSA";
+    private static final String CHARSET = "UTF-8";
+    private static final String RSA_ALGORITHM = "RSA";
+
     public static final String PUBLIC_KEY = "publicKey";
     public static final String PRIVATE_KEY = "privateKey";
 
@@ -45,8 +46,8 @@ public class RSA {
         Key privateKey = keyPair.getPrivate();
         String privateKeyStr = Base64.encodeBase64URLSafeString(privateKey.getEncoded());
         Map<String, String> keyPairMap = new HashMap<String, String>();
-        keyPairMap.put("publicKey", publicKeyStr);
-        keyPairMap.put("privateKey", privateKeyStr);
+        keyPairMap.put(PUBLIC_KEY, publicKeyStr);
+        keyPairMap.put(PRIVATE_KEY, privateKeyStr);
 
         return keyPairMap;
     }

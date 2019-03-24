@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.mybatis.generator.api.dom.OutputUtilities.newLine;
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
@@ -86,7 +85,8 @@ public class QuerySelectivePlugin extends PluginAdapter {
         querySelective.setVisibility(JavaVisibility.PUBLIC);
         interfaze.addMethod(querySelective);
 
-        String importArgs = context.getJavaModelGeneratorConfiguration().getTargetPackage() + String.format(".%sArgs", model);
+        String modelPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
+        String importArgs = modelPackage.substring(0, modelPackage.lastIndexOf(".")) + String.format(".args.%sArgs", model);
         interfaze.addImportedType(new FullyQualifiedJavaType(importArgs));
         return true;
     }
@@ -104,8 +104,9 @@ public class QuerySelectivePlugin extends PluginAdapter {
     @Override // 生成 Args 和 Enum 文件
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles() {
         List<GeneratedJavaFile> javaFiles = new ArrayList<>(definitions.size() * 2);
-        String targetPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
         String targetProject = context.getJavaModelGeneratorConfiguration().getTargetProject();
+        String modelPackage = context.getJavaModelGeneratorConfiguration().getTargetPackage();
+        String targetPackage = modelPackage.substring(0, modelPackage.lastIndexOf(".")) + ".args";
 
         GeneratedJavaFile javaFile;
         for (Map.Entry<TableConfiguration, List<IntrospectedColumn>> definition : definitions.entrySet()) {
@@ -114,7 +115,7 @@ public class QuerySelectivePlugin extends PluginAdapter {
 
             /****************************** enum *******************************/
 
-            Enum tableEnum = new Enum(String.format("%s.%sEnum", targetPackage, modelName));
+            Enum tableEnum = new Enum(String.format("%s.%sColumn", targetPackage, modelName));
             for (IntrospectedColumn introspectedColumn : definition.getValue()) {
                 tableEnum.addConstant(introspectedColumn.getActualColumnName());
                 tableEnum.setTableName(tableName);
@@ -128,6 +129,7 @@ public class QuerySelectivePlugin extends PluginAdapter {
             TopLevelClass tableArgs = new TopLevelClass(ArgsType);
             tableArgs.addImportedType("java.util.EnumSet");
             tableArgs.addImportedType("org.tree.commons.support.mapper.Args");
+            tableArgs.addImportedType(String.format("%s.%s", modelPackage, modelName));
             tableArgs.addSuperInterface(new FullyQualifiedJavaType(String.format("Args<%s>", modelName)));
             tableArgs.setVisibility(JavaVisibility.PUBLIC);
 
@@ -143,8 +145,8 @@ public class QuerySelectivePlugin extends PluginAdapter {
 
             field = new Field();
             field.setName("set");
-            field.setType(new FullyQualifiedJavaType(String.format("java.util.EnumSet<%sEnum>", modelName)));
-            field.setInitializationString(String.format("EnumSet.noneOf(%sEnum.class)", modelName));
+            field.setType(new FullyQualifiedJavaType(String.format("java.util.EnumSet<%sColumn>", modelName)));
+            field.setInitializationString(String.format("EnumSet.noneOf(%sColumn.class)", modelName));
             field.setVisibility(JavaVisibility.PRIVATE);
             tableArgs.addField(field);
 
@@ -156,10 +158,10 @@ public class QuerySelectivePlugin extends PluginAdapter {
                 method.setVisibility(JavaVisibility.PUBLIC);
                 method.addParameter(new Parameter(new FullyQualifiedJavaType("boolean"), "contained"));
                 method.addBodyLine("if (contained)");
-                method.addBodyLine(String.format("\tset.add(%sEnum.%s);",
+                method.addBodyLine(String.format("\tset.add(%sColumn.%s);",
                         modelName, introspectedColumn.getActualColumnName().toUpperCase()));
                 method.addBodyLine("else");
-                method.addBodyLine(String.format("\tset.remove(%sEnum.%s);",
+                method.addBodyLine(String.format("\tset.remove(%sColumn.%s);",
                         modelName, introspectedColumn.getActualColumnName().toUpperCase()));
                 method.addBodyLine("return this;");
                 tableArgs.addMethod(method);
@@ -169,7 +171,7 @@ public class QuerySelectivePlugin extends PluginAdapter {
             method.setReturnType(new FullyQualifiedJavaType(ArgsType));
             method.setName("setAllTrue");
             method.setVisibility(JavaVisibility.PUBLIC);
-            method.addBodyLine(String.format("set = EnumSet.allOf(%sEnum.class);", modelName));
+            method.addBodyLine(String.format("set = EnumSet.allOf(%sColumn.class);", modelName));
             method.addBodyLine("return this;");
             tableArgs.addMethod(method);
 
@@ -178,7 +180,7 @@ public class QuerySelectivePlugin extends PluginAdapter {
             method.setVisibility(JavaVisibility.PUBLIC);
             method.setName("getTableName");
             method.addAnnotation("@Override");
-            method.addBodyLine(String.format("return \"%s\";", tableName));
+            method.addBodyLine(String.format("return %sColumn.TABLE_NAME;", modelName));
             tableArgs.addMethod(method);
 
             method = new Method(); // toString
@@ -234,13 +236,11 @@ public class QuerySelectivePlugin extends PluginAdapter {
                 sb.append("package ");
                 sb.append(getType().getPackageName());
                 sb.append(';');
-                newLine(sb);
-                newLine(sb);
             }
 
             sb.append("\n\n").append("import org.tree.commons.support.mapper.Searchable;");
 
-            sb.append("\n\n\npublic enum ");
+            sb.append("\n\n").append("public enum ");
             sb.append(this.getType().getShortName());
             sb.append(" implements Searchable {");
 
@@ -249,6 +249,10 @@ public class QuerySelectivePlugin extends PluginAdapter {
             }
             sb.deleteCharAt(sb.length() - 1).append(";");
 
+            sb.append("\n\n\t").append(String.format("public static final String TABLE_NAME = \"%s\";", tableName));
+
+            sb.append("\n\n\t").append("private String name;");
+
             // 构造函数
             sb.append("\n\n\t")
                     .append(this.getType().getShortName())
@@ -256,12 +260,13 @@ public class QuerySelectivePlugin extends PluginAdapter {
                     .append("\n\t\t").append("this.name = name;")
                     .append("\n\t").append("}");
 
-            // public static final TABLE_NAME
-            // sb.append("\n\n\t").append(String.format("public static final String TABLE_NAME = \"%s\";", tableName));
+            sb.append("\n\n\t").append("@Override")
+                    .append("\n\t").append("public String getTableName() {")
+                    .append("\n\t\t").append("return TABLE_NAME;")
+                    .append("\n\t").append("}");
 
-            // name 及 getName
-            sb.append("\n\n\t").append("private String name;")
-                    .append("\n\n\t").append("public String getName() {")
+            sb.append("\n\n\t").append("@Override")
+                    .append("\n\t").append("public String getName() {")
                     .append("\n\t\t").append("return name;")
                     .append("\n\t").append("}");
 
