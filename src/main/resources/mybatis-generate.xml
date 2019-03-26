@@ -3,48 +3,79 @@
         PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
         "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
-    <!--<properties resource="generator.properties"/>-->
+
     <context id="generateTables" targetRuntime="MyBatis3">
-        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
-        <!--<plugin type="org.mybatis.generator.plugins.CachePlugin"></plugin>-->
-        <!--<plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>-->
+
+        <!-- 在配置文件中生成 <cache/> 标记
+        <plugin type="org.mybatis.generator.plugins.CachePlugin"/>-->
+
+        <!-- 为 pojo 实现 Serializable 接口
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>-->
+
         <!-- 自定义物理分页  可生成支持Mysql数据的limit  不支持Oracle
-        <plugin type="org.mybatis.generator.plugins.page.PaginationPlugin"/> -->
+        <plugin type="org.mybatis.generator.plugins.page.PaginationPlugin"/>-->
+
         <!-- 自定义查询指定字段
-        <plugin type="org.mybatis.generator.plugins.field.FieldsPlugin"/> -->
+        <plugin type="org.mybatis.generator.plugins.field.FieldsPlugin"/>-->
+
         <!-- 开启支持内存分页   可生成 支持内存分布的方法及参数
-        <plugin type="org.mybatis.generator.plugins.RowBoundsPlugin" /> -->
-        <!-- template entity时，生成hashcode和equals方法
-        <plugin type="org.mybatis.generator.plugins.EqualsHashCodePlugin" /> -->
-        <!-- my plugins -->
+        <plugin type="org.mybatis.generator.plugins.RowBoundsPlugin" />-->
+
+        <!-- 为 pojo 重写 hashcode 和 equals 方法
+        <plugin type="org.mybatis.generator.plugins.EqualsHashCodePlugin" />-->
+
+        <!-- 为 pojo 重写 toString 方法-->
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
+
+        <!-- 生成 SearchMapper 接口，用于 UnionSearch 连表查询-->
         <plugin type="org.tree.commons.generate.plugins.SearchMapperPlugin"/>
+
+        <!-- 为 Mapper 生成 QuerySelective 方法，可选参数检索：select x, y, z from tb -->
         <plugin type="org.tree.commons.generate.plugins.QuerySelectivePlugin"/>
+
+        <!-- 为 Mapper 生成可返回主键的插入方法 -->
         <plugin type="org.tree.commons.generate.plugins.InsertSelectiveWithGeneratedKeyPlugin"/>
+
+        <!-- 为 pojo 生成注释 -->
         <plugin type="org.tree.commons.generate.plugins.ModelCommentPlugin"/>
+
+        <!-- 生成 MapperMap（包含所有 Mapper 的引用），用于构造通用 Mapper：IntegratedMapper -->
         <plugin type="org.tree.commons.generate.plugins.MapperMapPlugin"/>
+
+        <!-- 为 Example 和 Mapper 进行泛型处理：实现 Example 和 BaseMapper -->
         <plugin type="org.tree.commons.generate.plugins.GenericDealPlugin"/>
+
+        <!-- 为 Mapper 生辰批量插入方法，非本人编写，有一定的 bug -->
         <plugin type="org.tree.commons.generate.plugins.BatchInsertPlugin"/>
 
+        <!-- MybatisXmlUtils 会在这里生成插件配置（源码第 80 行）-->
         <!--generator.define.plugins-->
 
         <commentGenerator>
             <property name="suppressAllComments" value="true"/>
         </commentGenerator>
+
         <jdbcConnection driverClass="${jdbc.driver:com.mysql.jdbc.Driver}"
                         connectionURL="${jdbc.url}"
                         userId="${jdbc.username}"
                         password="${jdbc.password}"/>
+
         <javaTypeResolver>
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
+
         <javaModelGenerator targetPackage="${generate.model.package}" targetProject="${generate.java.target:./src/main/java}">
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
+
         <sqlMapGenerator targetPackage="${generate.xml.dir:mapper}" targetProject="${generate.xml.target:./src/main/resources}"/>
+
         <javaClientGenerator type="XMLMAPPER" targetPackage="${generate.mapper.package}"
-                             targetProject="${generate.java.target:./src/main/java}">
-            <!--<property name="rootInterface" value="org.tree.faster.temp.BaseMapper-->
-        </javaClientGenerator>
+                             targetProject="${generate.java.target:./src/main/java}"/>
+
+        <!-- 这一句没什么用，表的配置会在代码中生成：TableGenerator:110 -->
         <table tableName="it won't be use"/>
+
     </context>
+
 </generatorConfiguration>

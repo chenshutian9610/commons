@@ -9,14 +9,23 @@ import java.util.Map;
  * @date 2019/3/4
  */
 public class BucketUtils {
-    /* 通过内部类构建一个桶 */
+
+    public static InnerBucket<String, Object> stringKeys() {
+        return new InnerBucket<>();
+    }
+
     public static <K, V> InnerBucket<K, V> put(K key, V value) {
         return new InnerBucket<>(key, value);
     }
 
-    /* 构建一个 Map<K, List<V>> 对象 */
+
+    /****************************** 内部类：构造桶的中间类 *******************************/
+
     public static class InnerBucket<K, V> {
         private Map<K, List<V>> bucket = new HashMap<>();
+
+        public InnerBucket() {
+        }
 
         private InnerBucket(K key, V value) {
             bucket.put(key, CollectionUtils.listOf(value));

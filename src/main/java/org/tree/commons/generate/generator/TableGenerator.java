@@ -29,6 +29,7 @@ import java.util.*;
  * @date 2018/12/28
  */
 public class TableGenerator {
+
     /* 默认的配置文件名 */
     private String configProperties = "generator.properties";
     private String configXml = "mybatis-generate.xml";
@@ -39,6 +40,8 @@ public class TableGenerator {
     private Properties properties;
     private Map<String, String> tableMap;
     private List<String> scripts = new ArrayList<>();
+
+    /****************************** 配置接口 *******************************/
 
     public TableGenerator(Class clazz) throws Exception {
         String packageToScan = clazz.getPackage().getName();
@@ -57,16 +60,20 @@ public class TableGenerator {
         this.configXml = configXml;
     }
 
-    /* 正向工程 */
+    /****************************** 对外开放接口 *******************************/
+
+    /* 正向工程一号入口：非强制生成表 */
     public void forward() throws ClassNotFoundException, SQLException {
-        if (scripts.size() == 0)
-            return;
-        if (properties == null)
-            properties = PropertiesUtils.getProperties(configProperties);
+        forward(false);
+    }
+
+    /* 正向工程二号入口：强制生成表 */
+    public void forward(boolean force) throws ClassNotFoundException, SQLException {
+        if (scripts.size() == 0) return;
+        if (properties == null) properties = PropertiesUtils.getProperties(configProperties);
 
         String driver = properties.getProperty("jdbc.driver");
-        if (driver == null)
-            driver = "com.mysql.jdbc.Driver";
+        if (driver == null) driver = "com.mysql.jdbc.Driver";
 
         Class.forName(driver);
         String url = properties.getProperty("jdbc.url");
@@ -75,8 +82,14 @@ public class TableGenerator {
         Connection connection = DriverManager.getConnection(url, username, password);
         Statement statement = connection.createStatement();
         for (String script : scripts) {
-            System.out.println(script + "\n");
-            statement.execute(script);
+            if (!force && script.startsWith("DROP"))
+                continue;
+            try {
+                statement.execute(script);
+                System.out.println(script + "\n");
+            } catch (Exception e) {
+                System.err.printf("执行失败（可能原因：表已存在！！！）\n%s\n", script);
+            }
         }
     }
 
@@ -112,6 +125,8 @@ public class TableGenerator {
         in.close();
     }
 
+    /****************************** 内部处理 *******************************/
+
     /* 初始化 tableMap 和 scripts */
     private Map<String, String> scanInit(String packageToScan) throws Exception {
         if (packageToScan == null)
@@ -141,12 +156,11 @@ public class TableGenerator {
             System.out.println();
 
             if (table.generate()) {
-                String drop = String.format("DROP TABLE IF EXISTS %s;", tableName);
                 ddl.append(String.format("CREATE TABLE %s (\n", tableName));
                 ddl.append(String.join(",\n", columnDefinitions));
                 ddl.append(String.format("\n) %s COMMENT = '%s';", table.meta(), table.comment()));
 
-                scripts.add(drop);
+                scripts.add(String.format("DROP TABLE IF EXISTS %s;", tableName));
                 scripts.add(new String(ddl));
             }
 

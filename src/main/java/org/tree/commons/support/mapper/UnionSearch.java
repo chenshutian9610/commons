@@ -73,14 +73,6 @@ public class UnionSearch {
         return this;
     }
 
-//    public void setColumnAlias(Map<Searchable, String> aliases) {
-//        aliases.forEach((k, v) -> {
-//            String alias = String.format("%s %s", k.getName(), v);
-//            columns = columns.contains(k.getName()) ?
-//                    columns.replace(k.getName(), alias) : String.format("%s,%s", columns, alias);
-//        });
-//    }
-
     public UnionSearch addColumnAlias(String column, String alias) {
         String definition = String.format("%s %s", column, alias);
         columns = columns.contains(column) ?

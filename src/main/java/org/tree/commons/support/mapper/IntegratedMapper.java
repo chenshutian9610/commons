@@ -25,10 +25,6 @@ public class IntegratedMapper {
     public <T> T querySelectiveForFirst(Args<T> args, Example<T> example) {
         List<T> result = getMapperByExample(example).querySelective(args, example);
         return result.size() == 0 ? null : result.get(0);
-//        if (result.size() == 1)
-//            return result.get(0);
-//        else
-//            throw new RuntimeException("querySelectForObject 查询到的数据不止一个");
     }
 
     public <T> List<T> querySelective(Args<T> args, Example<T> example) {

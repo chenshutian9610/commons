@@ -1,10 +1,7 @@
 package org.tree.commons.utils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  * @author er_dong_chen
@@ -19,9 +16,9 @@ public class CollectionUtils {
         return list;
     }
 
-    /* 返回 supplier 返回的对象，可以是 HashSet，LinkedList 等的 Collection 子类 */
-    public static <E, T extends Collection<E>> T of(Supplier<T> supplier, E... values) {
-        T collection = supplier.get();
+    /* 可以是 HashSet，LinkedList 等的 Collection 子类 */
+    public static <E, T extends Collection<E>> T of(Function<Integer, T> function, E... values) {
+        T collection = function.apply(values.length);
         Collections.addAll(collection, values);
         return collection;
     }

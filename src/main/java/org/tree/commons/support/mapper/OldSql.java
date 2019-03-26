@@ -7,6 +7,8 @@ import java.util.*;
 /**
  * @author er_dong_chen
  * @date 2018/11/28
+ * <p>
+ * 连表查询之前的解决方案，不建议用
  */
 public class OldSql {
     private Set<String> columns = new HashSet<>();

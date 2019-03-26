@@ -43,9 +43,7 @@ public class PerformanceUtils {
             duration = (System.nanoTime() - start) / 1_000_000;
             sum += duration;
             System.out.printf("%s : %s milliseconds%n", i, duration);
-//            System.out.println(String.format("%s : %s milliseconds", i, duration));
         }
-//        System.out.println(String.format("mean consumption : %s milliseconds", sum / times));
         System.out.printf("mean consumption : %s milliseconds%n", sum / times);
     }
 }

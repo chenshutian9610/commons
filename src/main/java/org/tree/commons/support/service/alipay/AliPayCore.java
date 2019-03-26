@@ -6,6 +6,7 @@ import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.request.*;
 import com.alipay.api.response.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.tree.commons.support.BaseConfig;
 
@@ -16,8 +17,10 @@ import java.math.BigDecimal;
  * @author er_dong_chen
  * @date 18-10-26
  */
+@Lazy
 @Component
 public class AliPayCore extends BaseConfig {
+
     private AlipayClient alipayClient;
     public final static String DEV = "https://openapi.alipaydev.com/gateway.do";
     public final static String PROD = "https://openapi.alipay.com/gateway.do";
@@ -31,6 +34,13 @@ public class AliPayCore extends BaseConfig {
     @Value("${aliPay.url:}")
     private String url;
 
+    public AliPayCore() {
+    }
+
+    public AliPayCore(String appId, String private_key, String ali_public_key, String url) {
+        alipayClient = new DefaultAlipayClient(url, appId, private_key, "json", "utf-8", ali_public_key, "RSA2");
+    }
+
     @PostConstruct
     public void init() {
         if (url.length() == 0)
@@ -43,15 +53,9 @@ public class AliPayCore extends BaseConfig {
                 "json", "utf-8", aliPublicKey, "RSA2");
     }
 
-    public AliPayCore() {
-    }
-
-    public AliPayCore(String appId, String private_key, String ali_public_key, String url) {
-        alipayClient = new DefaultAlipayClient(url, appId, private_key, "json", "utf-8", ali_public_key, "RSA2");
-    }
-
     /* 支付 */
-    public String pay(String out_trade_no, String subject, BigDecimal total_amount, String return_url, String notify_url, Object... body) throws Exception {
+    public String pay(String out_trade_no, String subject, BigDecimal total_amount,
+                      String return_url, String notify_url, Object... body) throws Exception {
         String content = "{'product_code':'FAST_INSTANT_TRADE_PAY','out_trade_no':'" + out_trade_no + "'," +
                 "'subject':'" + subject + "','total_amount':" + total_amount +
                 (body.length > 0 ? ",'body':'" + body[0] + "'" : "") + "}";

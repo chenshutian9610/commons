@@ -20,7 +20,6 @@ public class MapUtils {
         return JSON.parseObject(JSON.toJSONString(object), Map.class);
     }
 
-    /* 通过内部类构建一个映射 */
     public static <K, V> InnerMap<K, V> put(K key, V value) {
         return new InnerMap<>(key, value);
     }
@@ -29,7 +28,9 @@ public class MapUtils {
         return new InnerMap<>();
     }
 
-    /* 构建一个 Map<K, V> 对象 */
+
+    /****************************** 内部类：构建 Map 的中间类 *******************************/
+
     public static class InnerMap<K, V> {
         private Map<K, V> map = new HashMap<>();
 

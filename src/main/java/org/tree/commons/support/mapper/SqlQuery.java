@@ -2,18 +2,15 @@ package org.tree.commons.support.mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSetMetaData;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.*;
 
 /**
@@ -23,9 +20,6 @@ import java.util.*;
 @Lazy
 @Repository
 public class SqlQuery {
-
-    @Autowired
-    private MapperMap map;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -50,51 +44,45 @@ public class SqlQuery {
 
     /* 一般用于连表查询，使用的是 spring jdbc */
     public List<Map<String, String>> query(String sql, Object... params) {
-        return jdbcTemplate.query(deal(sql, params), new ResultSetExtractor<List<Map<String, String>>>() {
-            @Override
-            public List<Map<String, String>> extractData(ResultSet resultSet) throws SQLException, DataAccessException {
-                List<Map<String, String>> result = new ArrayList<>();
-                int count = resultSet.getMetaData().getColumnCount();
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                String key, value;
-                /* 只取第一条记录 */
-                while (resultSet.next()) {
-                    Map<String, String> map = new HashMap<>();
-                    for (int i = 0; i < count; i++) {
-                        value = resultSet.getString(i + 1);
-                        if (value == null)
-                            continue;
-                        key = toCamel(metaData.getColumnLabel(i + 1));
-                        map.put(key, value);
-                    }
-                    result.add(map);
+        return jdbcTemplate.query(deal(sql, params), (resultSet) -> {
+            List<Map<String, String>> result = new ArrayList<>();
+            int count = resultSet.getMetaData().getColumnCount();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            String key, value;
+            /* 只取第一条记录 */
+            while (resultSet.next()) {
+                Map<String, String> map = new HashMap<>();
+                for (int i = 0; i < count; i++) {
+                    value = resultSet.getString(i + 1);
+                    if (value == null)
+                        continue;
+                    key = toCamel(metaData.getColumnLabel(i + 1));
+                    map.put(key, value);
                 }
-                return result;
+                result.add(map);
             }
+            return result;
         });
     }
 
     /* 一般用于连表查询，使用的是 spring jdbc */
     public Map<String, String> queryForObject(String sql, Object... params) {
-        return jdbcTemplate.query(deal(sql, params), new ResultSetExtractor<Map<String, String>>() {
-            @Override
-            public Map<String, String> extractData(ResultSet resultSet) throws SQLException, DataAccessException {
-                Map<String, String> map = new HashMap<>();
-                int count = resultSet.getMetaData().getColumnCount();
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                String key, value;
-                /* 只取第一条记录 */
-                if (resultSet.next()) {
-                    for (int i = 0; i < count; i++) {
-                        value = resultSet.getString(i + 1);
-                        if (value == null)
-                            continue;
-                        key = toCamel(metaData.getColumnLabel(i + 1));
-                        map.put(key, value);
-                    }
+        return jdbcTemplate.query(deal(sql, params), (resultSet) -> {
+            Map<String, String> map = new HashMap<>();
+            int count = resultSet.getMetaData().getColumnCount();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            String key, value;
+            /* 只取第一条记录 */
+            if (resultSet.next()) {
+                for (int i = 0; i < count; i++) {
+                    value = resultSet.getString(i + 1);
+                    if (value == null)
+                        continue;
+                    key = toCamel(metaData.getColumnLabel(i + 1));
+                    map.put(key, value);
                 }
-                return map;
             }
+            return map;
         });
     }
 
@@ -104,12 +92,9 @@ public class SqlQuery {
 
     public Number executeAndReturnKey(String sql, Object... params) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(new PreparedStatementCreator() {
-            @Override
-            public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
-                PreparedStatement preparedStatement = connection.prepareStatement(deal(sql, params), PreparedStatement.RETURN_GENERATED_KEYS);
-                return preparedStatement;
-            }
+        jdbcTemplate.update((connection) -> {
+            PreparedStatement preparedStatement = connection.prepareStatement(deal(sql, params), PreparedStatement.RETURN_GENERATED_KEYS);
+            return preparedStatement;
         }, keyHolder);
         return keyHolder.getKey();
     }

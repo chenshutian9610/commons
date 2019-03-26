@@ -11,7 +11,6 @@ import org.tree.commons.support.BaseConfig;
  */
 @ControllerAdvice
 public class ControllerException extends BaseConfig {
-
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public Result deal(Exception e) {

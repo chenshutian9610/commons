@@ -1,6 +1,7 @@
 package org.tree.commons.support.service.message;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,6 +15,7 @@ import javax.mail.internet.MimeMessage;
  * @author er_dong_chen
  * @date 2018/12/14
  */
+@Lazy
 @Component
 public class EmailSender {
     private JavaMailSenderImpl sender;

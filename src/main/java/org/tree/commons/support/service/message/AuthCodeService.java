@@ -1,8 +1,8 @@
 package org.tree.commons.support.service.message;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.tree.commons.annotation.Comment;
 import org.tree.commons.utils.RandomUtils;
 
 import java.util.HashMap;
@@ -14,6 +14,7 @@ import java.util.Map;
  * <p>
  * 验证码服务
  */
+@Lazy
 @Service
 public class AuthCodeService {
     private Map<String, String> cache = new HashMap<>(32);

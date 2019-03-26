@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
  * @date 2018/12/21
  */
 public abstract class BaseConfig {
-
     @Value("${debug.enable:false}")
     protected boolean debugEnable;
-
 }

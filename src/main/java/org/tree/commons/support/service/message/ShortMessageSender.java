@@ -10,6 +10,7 @@ import com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse;
 import com.aliyuncs.profile.DefaultProfile;
 import com.aliyuncs.profile.IClientProfile;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
@@ -20,6 +21,7 @@ import java.util.Map;
  * @author er_dong_chen
  * @date 2018/12/17（copy from ali's demo）
  */
+@Lazy
 @Component
 public class ShortMessageSender {
 
