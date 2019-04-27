@@ -48,8 +48,9 @@ public class UnionSearch {
         return this;
     }
 
-    public Criteria createCriteria() {
-        criteria = new Criteria(tables);
+    public Criteria getCriteria() {
+        if (criteria == null)
+            criteria = new Criteria(tables);
         return criteria;
     }
 
@@ -94,7 +95,7 @@ public class UnionSearch {
         queryString.append(String.format(distinct ? selectDistinct : select,
                 String.join(",", columns),
                 String.join(",", tables),
-                criteria.toString()));
+                criteria == null ? "1=1" : criteria.toString()));
         if (groupBy != null)
             queryString.append(groupBy);
         if (orderBy != null)
