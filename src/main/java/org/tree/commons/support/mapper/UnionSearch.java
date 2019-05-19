@@ -105,7 +105,7 @@ public class UnionSearch {
         return queryString.toString();
     }
 
-    private String queryTotalCount() {
+    private String getSQLForTotalCount() {
         StringBuilder queryString = new StringBuilder();
         queryString.append(String.format(distinct ? selectDistinct : select,
                 "count(*)",
@@ -118,7 +118,7 @@ public class UnionSearch {
         String sql = toString();
         logger.info(String.format("连表查询：%s", sql));
         List<Map<?, ?>> map = mapper.query(sql);
-        totalCount = limit == null ? map.size() : mapper.count(queryTotalCount());
+        totalCount = limit == null ? map.size() : mapper.queryForLong(getSQLForTotalCount());
         return map;
     }
 

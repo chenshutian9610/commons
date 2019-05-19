@@ -8,7 +8,7 @@ import java.security.MessageDigest;
  */
 public class MD5 {
 
-    public static String encrypt(String str) {
+    public static String wrap(String str) {
         return str.length() == 32 ? str : getMD5(str);
     }
 

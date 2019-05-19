@@ -16,5 +16,5 @@ public interface UnionSearchMapper {
 
 
     @Select("${queryString}")
-    Long count(@Param("queryString") String queryString);
+    Long queryForLong(@Param("queryString") String queryString);
 }

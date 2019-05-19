@@ -3,6 +3,7 @@ package org.tree.commons.support.controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.tree.commons.exception.ErrorMessage;
 import org.tree.commons.support.BaseConfig;
 
 /**
@@ -11,6 +12,13 @@ import org.tree.commons.support.BaseConfig;
  */
 @ControllerAdvice
 public class ControllerException extends BaseConfig {
+    @ExceptionHandler(ErrorMessage.class)
+    @ResponseBody
+    public Result sendErrorMessage(Exception e) {
+        e.printStackTrace();
+        return new Result(e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public Result deal(Exception e) {
